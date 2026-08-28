@@ -8,11 +8,16 @@ Do not edit by hand: an edit is lost at the next generation, which teaches
 everyone to stop trusting the file. Write the commit subject instead —
 see `payload/.claude/rules/release.md`.
 
-## [Unreleased]
+## [0.1.0] - 2026-08-28
 
 ### Features
 
 - Initial claude-graft template
+
+### Bug fixes
+
+- Name the repository correctly in the generated doctrine header
+- Derive the plugin version from the git tag
 
 ### Documentation
 
