@@ -175,7 +175,7 @@ def build(workspace: Path, devkit: Path, name: str,
     # takes effect without rebuilding anything.
     md = ["# Workspace engineering doctrine",
           "",
-          "<!-- Derived by claude_template/build-plugin.py from payload/.claude/rules/.",
+          "<!-- Derived by claude-graft/build-plugin.py from payload/.claude/rules/.",
           "     Edit the rules and rebuild, or edit here and port it back. -->",
           "",
           "Launch Claude at the workspace root, not inside a member repository:",
