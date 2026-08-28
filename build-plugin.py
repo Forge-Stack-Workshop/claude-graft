@@ -37,7 +37,7 @@ because project settings are not inherited from parent directories.
 Member repositories receive nothing. No CLAUDE.md, no .claude/, no marker.
 """
 from __future__ import annotations
-import json, os, re, shutil, sys
+import json, os, re, shutil, subprocess, sys
 from pathlib import Path
 
 TEMPLATE = Path(__file__).resolve().parent
@@ -61,6 +61,21 @@ def frontmatter(text: str) -> tuple[dict | None, str]:
             if isinstance(fm.get(key), list):
                 fm[key].append(m.group(1).strip())
     return fm, body
+
+
+def template_version() -> str:
+    """The plugin version, read from this repository's latest tag.
+
+    The version exists in one place — the tag — and everything else reads it.
+    A number written into a second file disagrees with the first eventually.
+    """
+    try:
+        out = subprocess.run(["git", "describe", "--tags", "--abbrev=0"],
+                             cwd=TEMPLATE, capture_output=True, text=True,
+                             check=True).stdout.strip()
+        return out.lstrip("v") or "0.0.0"
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "0.0.0-dev"
 
 
 def git_root(path: Path) -> Path | None:
@@ -160,7 +175,7 @@ def build(workspace: Path, devkit: Path, name: str,
         "description": "Shared engineering doctrine for this workspace: "
                        "path-scoped conventions, scaffolding and flow skills, "
                        "review agents, and the write-time guards.",
-        "version": "0.1.0",
+        "version": template_version(),
     }, indent=2) + "\n")
 
     (plugin / ".claude-plugin" / "marketplace.json").write_text(json.dumps({
