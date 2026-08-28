@@ -1,16 +1,16 @@
 {
   "_notes": {
     "enabled": "Master switch. Set by ./install.sh --with-recording, or /recording on",
-    "paused": "Temporary stop without losing the setting — /recording pause",
+    "paused": "Temporary stop without losing the setting \u2014 /recording pause",
     "output_dir": "Where transcripts are written, relative to the project root",
     "redact": "Extra regexes replaced with [redacted] on top of the built-ins",
-    "max_tool_chars": "Tool arguments longer than this are truncated in the render",
-    "digest_lines": "Lines of the previous session replayed at SessionStart"
+    "digest_lines": "Lines of the previous session replayed at SessionStart",
+    "min_interval_seconds": "Minimum seconds between two mid-turn renders. Stop and SessionEnd always write, unthrottled."
   },
   "enabled": true,
   "paused": false,
   "output_dir": "docs/sessions",
   "redact": [],
-  "max_tool_chars": 220,
-  "digest_lines": 60
+  "digest_lines": 60,
+  "min_interval_seconds": 120
 }

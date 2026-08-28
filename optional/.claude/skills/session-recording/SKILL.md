@@ -5,9 +5,19 @@ description: Use when asked to record, pause, resume, or read back Claude sessio
 
 # Session recording
 
-Renders the real session transcript to readable Markdown under
-`docs/sessions/`, one file per session, plus an `INDEX.md`. Optional: it exists
-only if the template was installed with `--with-recording`.
+Renders the session as a **conversation** under `docs/sessions/`, one file per
+session, plus an `INDEX.md`. Optional: it exists only if the template was
+installed with `--with-recording`.
+
+What it contains is what was said — the prompts, and the replies as they
+appeared on screen — and nothing else. Reasoning, tool calls and their results
+are left out on purpose: they are how an answer was produced, not the answer,
+and they bury the exchange a reader came for. It reads as a conversation, which
+is what a transcript is.
+
+It is written **while the session runs**, not at the end: after every assistant
+turn, and mid-turn at most once every `min_interval_seconds` (120 by default).
+A long turn would otherwise leave the file empty for its whole duration.
 
 Two situations justify it.
 
@@ -31,8 +41,10 @@ you were doing.
 | `/recording resume` | resume after a pause |
 | `/recording off` | disable entirely |
 
-State lives in `.claude/session-recording.json`. Editing that file by hand does
-the same thing; the command exists so it can be done mid-conversation.
+State lives in `.claude/session-recording.json`, or in the devkit when the
+template is installed as a workspace. Editing that file by hand does the same
+thing; the command exists so it can be done mid-conversation.
+`min_interval_seconds` sets how often a still-running turn is flushed.
 
 Pausing is the honest tool for a passage that should not be recorded — a
 credential typed by mistake, an unrelated tangent. Pause, then resume. Deleting
@@ -50,7 +62,7 @@ been edited proves nothing, which defeats the reason it exists.
 ## What it is not
 
 - **Not a backup of Claude's own transcripts** — it renders them; the source
-  stays where Claude Code keeps it.
+  stays where Claude Code keeps it, with every step, if you need one.
 - **Not an audit log.** It is written by a hook in the project, so anyone who
   can edit the project can edit it. It documents; it does not attest.
 - **Not a secret filter.** Known key shapes are redacted — Anthropic, AWS,

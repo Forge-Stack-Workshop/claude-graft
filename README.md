@@ -217,11 +217,18 @@ so there is nothing generic to install. `/project-init` asks instead.
 
 ## Session recording — optional
 
-`--with-recording` adds a hook that renders the real session transcript to
-`docs/sessions/`, one readable file per session plus an index. It reads Claude's
-own transcript rather than reconstructing from hook events, because assistant
-prose appears in neither `UserPromptSubmit` nor `PostToolUse` — a reconstruction
-loses half the exchange.
+`--with-recording` renders each session as a **conversation** under
+`docs/sessions/`: what the human typed and what Claude put on screen, in order,
+and nothing else. Reasoning, tool calls and their results are left out — they
+are how an answer was produced, not the answer, and they bury the exchange a
+reader came for.
+
+It reads Claude's own transcript rather than reconstructing from hook events,
+because assistant prose appears in neither `UserPromptSubmit` nor `PostToolUse`
+— a reconstruction loses half the exchange. And it writes **while the session
+runs**: after every turn, plus mid-turn at most once every
+`min_interval_seconds`, so a long turn does not leave the file empty for its
+whole duration.
 
 Two situations justify it. **Transparency**: an interview, an audit, a client
 engagement, where what the AI did must be inspectable rather than asserted.

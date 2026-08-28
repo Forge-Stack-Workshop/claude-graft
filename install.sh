@@ -256,12 +256,15 @@ WHY = {
     "SessionStart": "Replays the tail of the previous session, so a developer "
                     "returning to the project is back in context without "
                     "re-reading their own code.",
-    "Stop": "Re-renders the transcript after every assistant turn, so the file "
+    "PostToolUse": "Re-renders while a turn is still running, throttled to one "
+                   "write per min_interval_seconds. A long turn would otherwise "
+                   "leave the transcript empty for its whole duration.",
+    "Stop": "Re-renders after every assistant turn, unthrottled, so the file "
             "stays current even if the session is never closed cleanly.",
     "SessionEnd": "Final render of the session transcript.",
 }
 
-for event in ("SessionStart", "Stop", "SessionEnd"):
+for event in ("SessionStart", "PostToolUse", "Stop", "SessionEnd"):
     entries = hooks.setdefault(event, [])
     if any(h.get("name") == "session-recorder"
            for e in entries for h in e.get("hooks", [])):

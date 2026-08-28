@@ -150,7 +150,8 @@ def build(workspace: Path, devkit: Path, name: str,
         why = {
             "SessionStart": "Replays the tail of the previous session, so a "
                             "developer returning to the project is back in context.",
-            "Stop": "Re-renders the transcript after every assistant turn.",
+            "PostToolUse": "Re-renders mid-turn, throttled to one write per min_interval_seconds.",
+            "Stop": "Re-renders after every assistant turn, unthrottled.",
             "SessionEnd": "Final render of the session transcript.",
         }
         for event, reason in why.items():
