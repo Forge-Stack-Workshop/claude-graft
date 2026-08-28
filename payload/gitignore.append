@@ -1,0 +1,12 @@
+
+# --- Claude Code ---
+.claude/settings.local.json
+.claude/SETUP-REPORT.md
+CLAUDE.local.md
+
+# --- Environment ---
+.env
+.env.local
+
+# --- Session transcripts (remove this line to commit them) ---
+docs/sessions/

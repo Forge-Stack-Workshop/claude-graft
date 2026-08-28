@@ -1,0 +1,6 @@
+{
+  "_notes": {
+    "disabled": "Check ids to switch off: dev-dockerfile-derives, ci-is-a-thin-caller, makefile-delegates, no-committed-env, generated-api-docs"
+  },
+  "disabled": []
+}

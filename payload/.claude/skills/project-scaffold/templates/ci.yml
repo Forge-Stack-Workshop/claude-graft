@@ -1,0 +1,16 @@
+# A caller, not a second definition of green.
+# Every step here must be reproducible locally with `make ci`.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [<DEFAULT_BRANCH>]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - run: make ci

@@ -1,0 +1,36 @@
+# Services, not images. One image, several commands.
+name: <APP>
+
+services:
+  app:
+    build: { context: ., target: runtime }
+    env_file: [.env]
+    ports: ["<PORT>:<PORT>"]
+    depends_on:
+      db: { condition: service_healthy }
+
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      additional_contexts: { base: "service:app" }
+    env_file: [.env]
+    volumes: [".:/app"]
+    command: sleep infinity
+
+  docs:
+    extends: { service: dev }
+    command: <DOCS_SERVE_COMMAND>   # must bind 0.0.0.0
+    ports: ["8000:8000"]
+
+  db:
+    image: <DB_IMAGE>:<PINNED>
+    environment: { POSTGRES_PASSWORD: <FROM_ENV> }
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+    volumes: ["dbdata:/var/lib/postgresql/data"]
+
+volumes:
+  dbdata:

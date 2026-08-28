@@ -1,0 +1,10 @@
+# Nothing here is generated into the repository itself — the devkit and the
+# per-project installs are written elsewhere. These are the usual local strays.
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+
+# Local Claude state, if you run Claude Code inside this repository
+.claude/settings.local.json
+CLAUDE.local.md

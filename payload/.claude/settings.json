@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+
+  "_mcp": "MCP servers are project-specific — this project's database, tracker, monitoring. The template ships none on purpose. Declare them in .mcp.json at the repo root; /project-init asks what deserves live access.",
+
+  "hooks": {
+    "PreToolUse": [
+      {
+        "_why": "No secret ever reaches disk or a commit. Refuses to write a file containing a known key shape, and refuses a git commit whose staged diff carries one. A net, not a permit — a password typed as prose passes through.",
+        "matcher": "Write|Edit|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "secret-scanner",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/secret-scanner.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "timeout": 10000
+          }
+        ]
+      },
+      {
+        "_why": "Every meaningful folder carries a README: role, structure, what belongs there and what does NOT, and the rules that govern it. BLOCKS creating a file in an undocumented folder — the moment a folder is born is the only moment anyone still knows what it was for. Written later it is archaeology. Editing an existing file only warns: that debt predates the change.",
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "folder-readme-guard",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/folder-readme-guard.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "_why": "The invariants whose moment of enforcement is identifiable at write time. BLOCKS what is never intentional: a Dockerfile.dev repeating a pinned FROM instead of deriving, a committed .env, a hand-edit of generated docs/api. WARNS on what may be deliberate: a CI workflow that is not a thin caller of `make ci`, a Makefile recipe running a tool on the host.",
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "convention-guard",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/convention-guard.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+
+    "PostToolUse": [
+      {
+        "_why": "Surfaces size and complexity drift against .claude/thresholds.json at the moment code is written. WARNS only, never blocks: friction while exploring costs more than it buys. CI is where these become gates.",
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "verifiable-thresholds",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/verifiable-thresholds.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}

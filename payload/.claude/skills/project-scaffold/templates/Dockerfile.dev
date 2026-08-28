@@ -1,0 +1,9 @@
+# syntax=docker/dockerfile:1
+# Development and CI image. Derives from the production one — never repeats it.
+# 'base' is supplied as a named build context (docker-bake.hcl / compose).
+# NOTE: it must NOT contain a `FROM <runtime>:<pinned>` line.
+
+FROM base AS dev
+USER root
+RUN <INSTALL_DEV_CI_AND_DOCS_TOOLCHAIN>
+USER app

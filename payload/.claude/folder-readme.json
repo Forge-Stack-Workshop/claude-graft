@@ -1,0 +1,10 @@
+{
+  "_notes": {
+    "enforce": "true blocks creating a file in an undocumented folder; false warns",
+    "roots": "Guard only under these paths, relative to the repo root. [] guards everywhere.",
+    "skip": "Extra folders to ignore, on top of the built-in list (.git, .claude, node_modules, .venv, dist, build, …)"
+  },
+  "enforce": true,
+  "roots": [],
+  "skip": []
+}

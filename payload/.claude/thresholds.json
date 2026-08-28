@@ -1,0 +1,25 @@
+{
+  "_notes": {
+    "_": "Balanced calibration. /project-init confirms these per project.",
+    "max_function_lines": "Warning above this, at write time",
+    "max_file_lines": "Warning above this",
+    "max_class_lines": "Warning above this",
+    "max_cyclomatic_complexity": "Heuristic estimate, not AST-based — a guide",
+    "max_function_params": "Above this, pass an object/dataclass",
+    "max_indent_depth": "Nesting levels inside a function",
+    "min_test_coverage_pct": "Enforced in CI, not by the hook",
+    "min_test_coverage_floor_pct": "Hard floor — CI fails below this",
+    "max_lint_warnings": "Enforce 0 in CI",
+    "no_todo_fixme_in_new_code": "Warn when TODO/FIXME appear in written files"
+  },
+  "max_function_lines": 50,
+  "max_file_lines": 500,
+  "max_class_lines": 300,
+  "max_cyclomatic_complexity": 10,
+  "max_function_params": 5,
+  "max_indent_depth": 4,
+  "min_test_coverage_pct": 80,
+  "min_test_coverage_floor_pct": 70,
+  "max_lint_warnings": 0,
+  "no_todo_fixme_in_new_code": true
+}
