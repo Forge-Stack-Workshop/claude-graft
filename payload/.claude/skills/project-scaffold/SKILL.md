@@ -29,8 +29,9 @@ Never copy a template with its placeholders left in.
 2. **`Dockerfile.dev`** — starts at `FROM base`, supplied as a named build
    context. It **must not** repeat the `FROM <runtime>:<pinned>` line; that
    repetition is the drift.
-3. **`docker-bake.hcl`** (or compose `additional_contexts`) — declares the
-   derivation as a build graph, not a tag lookup.
+3. **The derivation**, declared once — compose `additional_contexts` by
+   default, `docker-bake.hcl` when CI needs a build graph. One or the other,
+   never both.
 4. **`compose.yml`** — services, not images. The app, the docs site and any
    worker share one image with different commands.
 5. **`Makefile`** — the only human interface. Every target delegates to
@@ -59,8 +60,12 @@ and `python.md` says why.
   production plus tools, the strongest mirror. `deps` when the source is
   bind-mounted anyway. Never `base`: it skips the dependency layer, so dev and
   prod can resolve different versions.
-- **Whether bake or compose carries the derivation.** Bake when CI builds both;
-  compose when the developer only ever builds through `make`.
+- **Whether bake or compose carries the derivation.** Start with compose
+  `additional_contexts`: it is one file fewer, and the developer path only ever
+  builds through `make`. Add `docker-bake.hcl` when CI builds both targets and
+  you want the dependency as an explicit build graph with a shared cache —
+  which is a reason, not a default. Never keep both: two declarations of the
+  same derivation is the drift this whole design avoids.
 - **What `make ci` contains**, in cheapest-first order. Every gate below is
   blocking; ask before dropping one:
 
@@ -83,6 +88,15 @@ arriving by another door. If you must use it, make the build order explicit in
 the Makefile and say so in the README.
 
 ## Before you finish
+
+**Run what you wrote.** `make help`, `make build`, `make up`, `make ci` — each
+of them, as the reader will type it. A Makefile, a compose file and a Dockerfile
+are exactly the files that look right and fail on execution: a shell
+metacharacter in a recipe, a mount hiding a file, a port already taken. See
+`verification.md`.
+
+Then check that nothing wrote into the tree: `git status` clean, no new
+directory (`generated-artifacts.md`).
 
 - `make help` lists every target, generated from `##` comments.
 - Everything in the Makefile is `.PHONY`.

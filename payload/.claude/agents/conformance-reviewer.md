@@ -35,6 +35,9 @@ Check especially what is easy to forget because nothing enforces it:
 - A host-side command added to the README or the Makefile.
 - A `FROM <runtime>:<pinned>` line appearing in `Dockerfile.dev`.
 - A CI workflow that lists its own steps instead of calling `make ci`.
+- A command, URL or gate reported as working with no evidence it was run.
+- A tool configured to write inside the source tree, or a `.gitignore` line
+  added instead of pointing the tool elsewhere.
 
 ## Discipline
 

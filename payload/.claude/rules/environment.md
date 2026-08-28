@@ -13,6 +13,13 @@ The host installs one thing: a container runtime. No language runtime, no
 package manager, no toolchain is a prerequisite for working on this project.
 When proposing a command, propose the one that runs in the container.
 
+**Including when you are only checking.** A version check, a one-off script
+"just to see", a quick import to confirm something — in the container like
+everything else. Interpreters leave artefacts owned by the host user
+(`generated-artifacts.md`), and they answer with the host's versions, which are
+not the project's. A verification that runs somewhere else verifies nothing,
+and litters the tree on its way out.
+
 ## Parity and pinning
 
 - **The production Dockerfile stays pure**, and the dev/test image **derives**

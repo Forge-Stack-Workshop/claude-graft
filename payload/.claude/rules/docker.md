@@ -30,6 +30,24 @@ this rule exists to prevent.
   commands. A second image because a second process exists is how a project
   ends up with four bases.
 - Non-root user created in `base`, so every derived image inherits it.
+
+## The image serves what it references
+
+The production image is complete on its own: no manual step, no writable
+volume, no second service needed to make it serve.
+
+- **Assets are collected, compiled and fingerprinted at build time**, never at
+  start-up. An image that prepares itself when it boots fails differently on
+  every restart, and twice at once behind a load balancer.
+- **A development server's conveniences are not a runtime.** Everything it
+  served for free — static files, autoreload, verbose errors — needs an
+  explicit answer in the image, or it is missing in production only, which is
+  the worst place to find out.
+- Values needed only at build time are `ARG`, never `ENV`: an `ENV` persists
+  into the running container, and neither carries a secret since build
+  arguments stay readable in the image history.
+- **Verify by requesting the page**, not by listing the directory that should
+  contain it — see `verification.md`.
 - **No secret in an image, and none in a build argument** — build args are
   visible in image history.
 - Layers ordered by rate of change; a real `.dockerignore`; healthchecks with

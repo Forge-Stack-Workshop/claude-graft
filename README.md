@@ -144,7 +144,10 @@ call) · `configuration` (validated at startup, read once, no development-only
 default) · `environment` (nothing runs on the host — build, tests and the docs
 site all run in the container) · `testing` (a bug fix starts with a red test; a
 feature merges with its tests) · `documentation` (a README per folder, docs ship
-in the same commit) · `code-flow` (the gold book, below) · `git` (Conventional
+in the same commit) · `verification` (a command you did not run is a
+hypothesis) · `generated-artifacts` (no tool writes into the source tree, and
+`.gitignore` is the symptom not the fix) · `code-flow` (the gold book, below) ·
+`git` (Conventional
 Commits, always a branch, never commit unasked, commit = code + tests + docs) ·
 `language` (English everywhere) · `security` (no secret, explicit authorization,
 validate at the boundary) · `observability` (structured logs, correlated, levels

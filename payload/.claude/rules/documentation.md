@@ -13,14 +13,9 @@ when asked.
 ## Every meaningful folder carries a README
 
 When creating a folder — or doing substantial work in one that has no
-`README.md` — add one. It answers, in this order:
-
-1. **Role** — why this folder exists, one or two sentences.
-2. **Structure** — the subfolders and key files, and what each is.
-3. **Should contain** — what belongs here.
-4. **Should NOT contain** — what must never land here, and where it goes instead.
-5. **Rules** — conventions governing this folder. Link to the rule files, do not
-   restate them.
+`README.md` — add one. It says what the folder is for, what belongs in it, what
+must never land there and where that goes instead, and the conventions that
+govern it. `/folder-readme` carries the full structure.
 
 Skip: the repo root, generated or vendored directories, empty placeholders.
 Do not churn — only document a folder you are already working in. Never open a

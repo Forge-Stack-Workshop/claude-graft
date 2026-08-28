@@ -180,6 +180,9 @@ Finish by presenting, in the conversation, your model of this project:
   the gold book, stated as a fact rather than left implicit.
 - Where a rule is **advisory** versus **enforced by a hook**, since only the
   second survives a model that decides otherwise.
+- What you **verified by running it** versus what you took from reading. Every
+  command you recorded in `quality-gate.json` should be in the first group;
+  say plainly which are not (`verification.md`).
 - What you would add next, and what you deliberately left out.
 
 Then ask whether it matches how the developer sees the project. **Iterate on
