@@ -19,7 +19,8 @@ triggers it.
    and say where the line falls.
 4. Draft the message: `type(scope): imperative subject`, no trailing period,
    under 72 characters. The body explains *why*. Add a `BREAKING CHANGE:` footer
-   where it applies. **Never** add a `Co-Authored-By: Claude` trailer, a
-   "Generated with…" footer, or any other tool signature — see `git.md`.
+   where it applies. The message ends at its last line of substance: **never**
+   append a co-author trailer naming an assistant, a "generated with" footer, or
+   any other tool signature — see `git.md`.
 5. Report: the files to stage, the proposed message, and the exact command the
    developer can run.

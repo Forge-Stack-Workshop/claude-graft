@@ -10,8 +10,9 @@
   The body says *why* — the diff already says *what*.
 - **One commit = code + its tests + its documentation.** A commit that changes
   behaviour while touching neither is incomplete.
-- **No tool signature, anywhere.** No `Co-Authored-By: Claude`, no "Generated
-  with…" footer, no mention of an assistant — not in commit messages, not in
-  pull request bodies, not in the project's files. The history is the team's,
-  not that of the tooling that helped write it.
+- **No tool signature, anywhere.** No co-author trailer naming an assistant, no
+  "generated with" footer, no session link, no mention of an assistant — not in
+  commit messages, not in pull request bodies, not in the project's files. The
+  history is the team's, not that of the tooling that helped write it. A commit
+  message ends at its last line of substance.
 - Never commit generated files, secrets, or local configuration.
