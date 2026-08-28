@@ -13,3 +13,10 @@ see `payload/.claude/rules/release.md`.
 ### Features
 
 - Initial claude-graft template
+
+### Documentation
+
+- Add changelog generated from the commit history
+- Restore the full README after the rebase
+- Forbid any tool signature in commits and project files
+- State the signature rule without quoting the forbidden markers
