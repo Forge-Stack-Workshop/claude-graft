@@ -59,6 +59,19 @@ const CHECKS = [
     },
   },
   {
+    id: "python-single-manifest",
+    block: true,
+    // Creating one is the violation; an existing file is pre-existing debt.
+    match: (p) => /(^|[\/\\])(requirements[^\/\\]*\.txt|setup\.py|setup\.cfg|Pipfile)$/.test(p),
+    run: (text, abs) => fs.existsSync(abs) ? null :
+      `pyproject.toml is the only Python manifest.\n` +
+      `Runtime dependencies go in [project].dependencies, tooling in ` +
+      `[dependency-groups] (PEP 735), the build backend in [build-system] — ` +
+      `hatchling, not setuptools. Need the lock in another format? ` +
+      `\`uv export --format pylock.toml\`. A project with two manifests has two ` +
+      `answers to what it needs, and they diverge. See .claude/rules/python.md.`,
+  },
+  {
     id: "no-committed-env",
     block: true,
     match: (p) => /(^|[\/\\])\.env(\.[A-Za-z0-9_-]+)?$/.test(p) && !/\.example$/.test(p),
@@ -144,7 +157,7 @@ process.stdin.on("end", () => {
       // An Edit sees only its fragment; read the file for whole-file checks.
       if (!text && fs.existsSync(filePath)) text = fs.readFileSync(filePath, "utf8");
     }
-    const problem = check.run(text ?? "");
+    const problem = check.run(text ?? "", path.resolve(projectDir, filePath));
     if (!problem) continue;
     if (check.block) {
       process.stdout.write(JSON.stringify({

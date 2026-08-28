@@ -29,6 +29,9 @@ It goes behind an adapter, never imported by the domain — see
 
 - **The lockfile is the source of truth**, committed, and never hand-edited.
   The manifest states intent; the lockfile states reality.
+- **One manifest per project.** In Python that is `pyproject.toml` and nothing
+  else — no `requirements.txt`, no `setup.py`. Two manifests give two answers
+  to the same question. See `python.md`.
 - Application dependencies are pinned exactly. A library's are ranged — an
   application that floats reproduces nothing.
 - Install from the lockfile in CI and in images (`--frozen`, `npm ci`,

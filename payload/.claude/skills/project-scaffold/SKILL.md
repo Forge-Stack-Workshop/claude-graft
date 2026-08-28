@@ -38,6 +38,21 @@ Never copy a template with its placeholders left in.
 6. **`.github/workflows/ci.yml`** — a thin caller: checkout, `make ci`.
 7. **`.dockerignore`**, **`.env.example`**.
 
+## Language specifics
+
+**Python** — `pyproject.toml` is the only manifest: `[project]` for metadata and
+runtime dependencies, `[dependency-groups]` for tooling, `[build-system]` with
+`hatchling`. `src/` layout. `uv` with a committed `uv.lock`, installed frozen:
+
+```dockerfile
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev            # deps stage
+RUN uv sync --frozen                     # dev stage, tooling included
+```
+
+Never scaffold a `requirements.txt` or a `setup.py` — the guard refuses them,
+and `python.md` says why.
+
 ## The decisions to make, not guess
 
 - **Which stage `Dockerfile.dev` derives from.** `runtime` by default — dev is
