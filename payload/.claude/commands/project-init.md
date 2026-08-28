@@ -34,7 +34,9 @@ Read the repository first. Never ask what the code can tell you. Establish:
   the CI workflow: a task documented as a bare host command is a gap. Note
   every one against `rules/environment.md` — this is the developer's stated
   hard line, and the most likely place an existing project fails it.
-- **Database**: engine, migration tool, where the schema lives.
+- **Database**: engine, migration tool, where the schema lives. Is there a
+  `docs/data-model/`, and does it still match the migrations? Note anything the
+  schema enforces only in the application.
 - **Tests**: framework, where they live, whether coverage is measured.
 - **Documentation**: is there a `mkdocs.yml`? A `docs/` tree? Do `docs/flows/`
   and `docs/coverage.md` exist, and are they current or abandoned? An
@@ -50,14 +52,34 @@ determine**. Only then start asking.
 
 ## Layer 1 — Product and intent
 
-The code cannot tell you this. Ask, one focused round at a time:
+### Open the interview with an open question
 
-- What is this product, in one sentence? Who uses it?
-- What is the current objective — the thing being built right now?
+**The first question is free-form prose, not a multiple choice.** Present the
+discovery table, then ask, in the conversation and with no options offered:
+
+> What is this repository, what is the objective, and what should I take into
+> account from the very start?
+
+Then stop and read the answer. It sets the vocabulary, the stakes and the
+constraints — and offering options here would narrow the answer to what you
+already guessed from the code, which is exactly what you must not do. The
+developer knows things the repository cannot show: a deadline, a migration in
+flight, a decision already taken, a part nobody may touch.
+
+Ask a second open follow-up if the answer leaves something load-bearing
+unclear. Only then move to structured questions.
+
+### Then the structured rounds
+
+With that context, the choices become sharp rather than generic:
+
 - What is explicitly **out of scope**?
 - What is the failure that would hurt most? (data loss, downtime, wrong
   numbers, leaked data — this drives where rigour goes)
 - What stage is it at: prototype, in production, legacy under repair?
+- Who uses it, and who maintains it?
+
+Do not re-ask anything the open answer already settled.
 
 ## Layer 2 — Rules and points of attention
 
@@ -73,6 +95,11 @@ The code cannot tell you this. Ask, one focused round at a time:
 - Confirm the numeric thresholds in `.claude/thresholds.json` against this
   codebase. If most existing files already violate one, say so — a threshold
   that is violated everywhere trains everyone to ignore the warnings.
+- **The data model.** If the project has a schema, offer to run the
+  `data-model-map` skill: it generates the ERD, writes the hand-written map,
+  and reports modelling smells — two entities that are one, a foreign key
+  crossing a bounded context, integrity left to the application. Report them as
+  candidates; never change a model, since a schema change is a data migration.
 - **The gold book** (`code-flow.md`): ask which existing features already
   deserve a flow document, and in what order. On an existing codebase this is a
   backlog, not a one-shot — propose the two or three flows that would pay off

@@ -14,6 +14,9 @@ distinction is the whole point:
 | `docs/coverage.md` | **hand-written** | what is handled, and above all what is not |
 | `docs/api/` | **generated** from docstrings | what one precise function does |
 
+The schema gets the same treatment under `docs/data-model/` — see
+`database.md` and the `data-model-map` skill.
+
 **Shipping a behaviour without updating its flow and its coverage is not
 shipping it.** Like the README, this goes in the same commit, unasked.
 

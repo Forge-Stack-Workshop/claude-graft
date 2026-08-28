@@ -75,6 +75,15 @@ const CHECKS = [
       `Fix the docstring instead; the next build would overwrite this anyway. ` +
       `See .claude/rules/mkdocs.md.`,
   },
+  {
+    id: "generated-erd",
+    block: true,
+    match: (p) => /(^|[\/\\])docs[\/\\]data-model[\/\\]erd\.md$/.test(p),
+    run: () => `\`docs/data-model/erd.md\` is generated from the models.\n` +
+      `Change the model or the migration, then regenerate with the ` +
+      `data-model-map skill. A hand-drawn diagram stops matching the schema ` +
+      `silently, which is worse than no diagram. See .claude/rules/database.md.`,
+  },
 ];
 
 

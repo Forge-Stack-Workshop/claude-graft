@@ -23,14 +23,16 @@ docs/
 ├── index.md          what this project is, and how to run it
 ├── flows/            one file per feature — hand-written
 ├── coverage.md       business rules and their reach — hand-written
+├── data-model/       erd.md generated; README and invariants hand-written
 ├── api/              generated from docstrings — never hand-edited
 └── architecture/     layers, boundaries, decisions that shaped them
 ```
 
 ## Rules
 
-- **`docs/api/` is generated.** Never edit a file under it, never commit a hand
-  written page there. Fix the docstring instead. The generator
+- **`docs/api/` and `docs/data-model/erd.md` are generated.** Never edit them,
+  never commit a hand-written page there. Fix the docstring or the model
+  instead. The generator
   (`mkdocstrings` or the language equivalent) is configured in `mkdocs.yml`.
 - **The build is strict.** `mkdocs build --strict` runs in CI and fails on a
   dead link, an unresolved reference, or a directive pointing at a deleted
