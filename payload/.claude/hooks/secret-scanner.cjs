@@ -9,8 +9,6 @@
  * Hook type: PreToolUse — target: Write|Edit|MultiEdit|Bash
  * Exit code 2 blocks the action with the message on stdout.
  *
- * @tag @[claude-sonnet-4-6]
- *
  * Configuration:
  *   SS_ALLOWLIST_FILE  - path to JSON allowlist (default: .claude/secret-scanner-allowlist.json)
  *   SS_EXTRA_PATTERNS  - JSON array of additional regex strings to check
