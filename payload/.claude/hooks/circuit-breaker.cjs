@@ -6,7 +6,6 @@
  * Also usable as a PreToolUse hook for Bash tool calls that hit external APIs.
  *
  * @module circuit-breaker
- * @tag @[claude-opus-4-8]
  *
  * States: closed (normal) | open (blocked) | half-open (trial)
  *
@@ -207,12 +206,19 @@ if (require.main === module) {
     const circuit = cmd.replace(/\s+/g, " ").slice(0, 60);
 
     if (!canCall(circuit)) {
-      // Exit 2 blocks the tool call
+      // Carry the deny decision in the PreToolUse JSON payload (same schema as
+      // git-safety-guard), not an ad-hoc {type:"result"} shape.
       const msg = `[circuit-breaker] Blocked: circuit "${circuit}" is OPEN. Use CB_RESET_TIMEOUT_MS or call reset() to recover.`;
       process.stdout.write(
-        JSON.stringify({ type: "result", output: msg }) + "\n"
+        JSON.stringify({
+          hookSpecificOutput: {
+            hookEventName: "PreToolUse",
+            permissionDecision: "deny",
+            permissionDecisionReason: msg,
+          },
+        }) + "\n"
       );
-      process.exit(2);
+      process.exit(0);
     }
 
     process.exit(0);

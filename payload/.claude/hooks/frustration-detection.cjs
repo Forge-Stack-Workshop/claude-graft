@@ -9,7 +9,6 @@
  * Does NOT block (exit 0 always). Injects context via stdout JSON using the
  * current schema: { hookSpecificOutput: { hookEventName, additionalContext } }.
  *
- * @tag @[claude-opus-4-8]
  *
  * Config: reads frustrationKeywords / continuationKeywords / frustrationInjection /
  * continuationInjection from .claude/config/hooks-config.json → frustrationDetection
@@ -69,8 +68,21 @@ function matchesKeywords(text, keywords) {
 }
 
 // ── Context injection builders (config text wins, English fallback otherwise) ───
+
+// additionalContext must be a string. Accept a configured string as-is, join a
+// configured array of lines (the natural bilingual FR/EN shape), and ignore any
+// other type (number/object/null) by returning null so the English fallback wins.
+function coerceInjection(value) {
+  if (typeof value === "string" && value.length > 0) return value;
+  if (Array.isArray(value) && value.length > 0) {
+    return value.filter((v) => typeof v === "string").join("\n");
+  }
+  return null;
+}
+
 function frustrationContext(prompt, cfg) {
-  if (cfg.frustrationInjection) return cfg.frustrationInjection;
+  const injected = coerceInjection(cfg.frustrationInjection);
+  if (injected !== null) return injected;
   return [
     "The user seems frustrated or stuck. Adjust your response accordingly:",
     "- Be extremely direct and concise. No preamble, no recap.",
@@ -83,7 +95,8 @@ function frustrationContext(prompt, cfg) {
 }
 
 function continuationContext(prompt, cfg) {
-  if (cfg.continuationInjection) return cfg.continuationInjection;
+  const injected = coerceInjection(cfg.continuationInjection);
+  if (injected !== null) return injected;
   return [
     "The user wants you to continue without restarting or summarizing.",
     "- Pick up exactly where you left off.",

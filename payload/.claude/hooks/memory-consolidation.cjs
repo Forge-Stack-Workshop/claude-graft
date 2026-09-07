@@ -16,7 +16,6 @@
  *   --dir        Target directory (default: .claude in current working dir)
  *   --verbose    Print all scanned entries, not just changes
  *
- * @tag @[claude-opus-4-8]
  */
 
 "use strict";
@@ -176,15 +175,19 @@ function processFile(filePath) {
           file: path.relative(TARGET_DIR, filePath),
           ref,
         });
-        // Replace broken ref with a note
-        newContent = newContent.replace(
-          new RegExp(
-            ref.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-            "g"
-          ),
-          `${ref} <!-- ⚠️ file not found — verify reference -->`
-        );
-        changed = true;
+        // Annotate the broken ref AFTER the markdown link's closing paren — never
+        // inside it, which would corrupt the link target — and only once: the
+        // negative lookahead skips a ref already carrying the note, so repeated
+        // runs are idempotent instead of appending the note without bound.
+        const esc = ref.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const linkRe = new RegExp(`\\]\\(${esc}\\)(?!\\s*<!-- ⚠️ file not found)`, "g");
+        if (linkRe.test(newContent)) {
+          newContent = newContent.replace(
+            new RegExp(`\\]\\(${esc}\\)(?!\\s*<!-- ⚠️ file not found)`, "g"),
+            `](${ref}) <!-- ⚠️ file not found — verify reference -->`
+          );
+          changed = true;
+        }
       }
     }
   }

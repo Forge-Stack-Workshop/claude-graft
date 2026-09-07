@@ -11,7 +11,6 @@
  * stdout : JSON { hookSpecificOutput: { permissionDecision: "deny", ... } } when blocking
  * exit 0 : always (decision is carried in the JSON payload, not the exit code)
  *
- * @tag @[claude-opus-4-8]
  */
 
 const fs = require("fs");
@@ -67,6 +66,41 @@ const CHECKS = [
 		test: (sub) => /\bbranch\b/.test(sub) && /(-D\b|--delete\s+--force\b)/.test(sub),
 		reason:
 			"`git branch -D` force-deletes a branch even with unmerged commits. " +
+			"Ask the user to confirm explicitly, or run it manually outside Claude.",
+	},
+	{
+		name: "force push via +refspec",
+		// `git push origin +main:main` forces the update with a leading `+` on the
+		// refspec — no --force/-f flag, so the flag-based check above misses it.
+		test: (sub) => /\bpush\b/.test(sub) && /\s\+[^\s:]+:/.test(sub),
+		reason:
+			"A `+`-prefixed refspec force-updates the remote ref, same as --force. " +
+			"Ask the user to confirm explicitly, or run it manually outside Claude.",
+	},
+	{
+		name: "remote branch delete",
+		// `git push --delete` and the colon-refspec form `git push origin :branch`
+		// both delete a remote branch.
+		test: (sub) =>
+			/\bpush\b/.test(sub) && (/--delete\b/.test(sub) || /\s:[^\s:]+(\s|$)/.test(sub)),
+		reason:
+			"This deletes a remote branch. " +
+			"Ask the user to confirm explicitly, or run it manually outside Claude.",
+	},
+	{
+		name: "force clean",
+		// `git clean -f`/`-fd`/`-fdx` deletes untracked (and ignored) files irreversibly.
+		test: (sub) => /\bclean\b/.test(sub) && /(?:^|\s)-[a-eg-z]*f[a-z]*\b|--force\b/.test(sub),
+		reason:
+			"`git clean -f` permanently deletes untracked files. " +
+			"Ask the user to confirm explicitly, or run it manually outside Claude.",
+	},
+	{
+		name: "force checkout",
+		// `git checkout -f` / `git checkout --force` discards local modifications.
+		test: (sub) => /\bcheckout\b/.test(sub) && /(?:^|\s)-f\b|--force\b/.test(sub),
+		reason:
+			"`git checkout -f` discards uncommitted changes irreversibly. " +
 			"Ask the user to confirm explicitly, or run it manually outside Claude.",
 	},
 ];

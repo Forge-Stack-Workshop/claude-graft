@@ -13,7 +13,6 @@
  * immediately). Best-effort: skips silently if graphify or graphify-out/
  * are absent.
  *
- * @tag @[claude-opus-4-8]
  */
 
 const fs = require("fs");

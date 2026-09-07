@@ -23,7 +23,6 @@
  *   // This rule only applies when using @[claude-sonnet-4-6]
  *   - Keep responses under 200 words
  *
- * @tag @[claude-sonnet-4-6]
  */
 
 "use strict";
