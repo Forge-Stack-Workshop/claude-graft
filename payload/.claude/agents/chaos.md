@@ -1,4 +1,5 @@
 ---
+name: chaos
 description: Resilience testing — failure injection, SLO validation under stress, pod disruption budgets, recovery verification. Use before production releases.
 model: sonnet
 ---
