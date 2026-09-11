@@ -86,7 +86,7 @@ def git_root(path: Path) -> Path | None:
 
 
 def build(workspace: Path, devkit: Path, name: str,
-          recording: bool = False) -> None:
+          recording: bool = False, rtk: bool = False) -> None:
     # The devkit repository holds more than Claude; the configuration takes one
     # subdirectory of it rather than colonising its root.
     repo = git_root(devkit)
@@ -142,6 +142,16 @@ def build(workspace: Path, devkit: Path, name: str,
                         plugin / "skills" / "session-recording", dirs_exist_ok=True)
         shutil.copy2(opt / "commands" / "recording.md", plugin / "commands")
 
+    # Optional: RTK token-savings synergy. No script ships — RTK is its own
+    # binary; the plugin carries only the skill that teaches the prefix rule and
+    # the /rtk command that reads the savings. The PreToolUse rewrite is wired
+    # into settings below.
+    if rtk:
+        opt = TEMPLATE / "optional" / ".claude"
+        shutil.copytree(opt / "skills" / "rtk-savings",
+                        plugin / "skills" / "rtk-savings", dirs_exist_ok=True)
+        shutil.copy2(opt / "commands" / "rtk.md", plugin / "commands")
+
     settings = json.loads((PAYLOAD / "settings.json").read_text())
     hooks = settings.get("hooks", {})
     if recording:
@@ -168,6 +178,24 @@ def build(workspace: Path, devkit: Path, name: str,
                 # the repo, so shared code keeps per-repo thresholds.
                 hook["command"] = hook["command"].replace(
                     '$CLAUDE_PROJECT_DIR/.claude/hooks/', '${CLAUDE_PLUGIN_ROOT}/hooks/')
+    if rtk:
+        # Appended LAST on PreToolUse, and deliberately after the translation
+        # loop: the safety guards (secret-scanner, git-safety-guard) must see the
+        # raw command first — if one denies, RTK never rewrites. RTK is its own
+        # binary, not a plugin script, so no path is translated. Absent `rtk`,
+        # the guard exits 0 with no output and the command runs unchanged.
+        hooks.setdefault("PreToolUse", []).append({
+            "_why": "Optional RTK token savings. Rewrites a verbose Bash command "
+                    "to its token-optimised `rtk` proxy before it runs, so the "
+                    "output that reaches the context window is 60-90% smaller. "
+                    "Runs after the safety guards, so a denied command is never "
+                    "rewritten. Inert when `rtk` is not on PATH. See the "
+                    "rtk-savings skill; read the savings with /rtk.",
+            "matcher": "Bash",
+            "hooks": [{"type": "command", "name": "rtk-hook",
+                       "command": "sh -c 'command -v rtk >/dev/null 2>&1 "
+                                  "&& exec rtk hook claude || true'",
+                       "timeout": 10000}]})
     (plugin / "hooks" / "hooks.json").write_text(
         json.dumps({"hooks": hooks}, indent=2) + "\n")
 
@@ -285,7 +313,7 @@ def build(workspace: Path, devkit: Path, name: str,
     print(f"repos       untouched — no CLAUDE.md, no .claude/, nothing")
 
 
-def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
+def parse(argv: list[str]) -> tuple[Path, Path, str, bool, bool]:
     flags = {"--name", "--devkit"}
     positional, opts, skip = [], {}, False
     for i, a in enumerate(argv):
@@ -309,7 +337,7 @@ def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
     if workspace not in devkit.parents and devkit != workspace:
         raise SystemExit(f"--devkit must live inside the workspace ({workspace})")
     name = opts.get("--name") or (git_root(devkit) or devkit).name
-    return workspace, devkit, name, "--with-recording" in argv
+    return workspace, devkit, name, "--with-recording" in argv, "--with-rtk" in argv
 
 
 if __name__ == "__main__":

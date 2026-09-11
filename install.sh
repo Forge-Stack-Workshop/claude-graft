@@ -5,6 +5,7 @@
 #   ./install.sh /path/to/repo
 #   ./install.sh /path/to/repo --dry             show what would happen
 #   ./install.sh /path/to/repo --with-recording  also install the session recorder
+#   ./install.sh /path/to/repo --with-rtk         also wire RTK token-savings synergy
 #
 # Multi-repo workspace — the doctrine is central to THIS project, never to the
 # machine, so changing one project's Claude never touches another's:
@@ -30,6 +31,7 @@ PAYLOAD="$TEMPLATE_DIR/payload"
 target=""
 dry=false
 recording=false
+rtk=false
 mode=mono
 next_is_name=false
 next_is_devkit=false
@@ -41,6 +43,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry)            dry=true ;;
     --with-recording) recording=true ;;
+    --with-rtk)       rtk=true ;;
     --workspace)      mode=workspace ;;
     --devkit)         next_is_devkit=true ;;
     --name)           next_is_name=true ;;
@@ -50,8 +53,8 @@ for arg in "$@"; do
 done
 
 if [ -z "$target" ]; then
-  echo "usage: $0 <repo> [--dry] [--with-recording]" >&2
-  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording]" >&2
+  echo "usage: $0 <repo> [--dry] [--with-recording] [--with-rtk]" >&2
+  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording] [--with-rtk]" >&2
   exit 64
 fi
 
@@ -62,13 +65,21 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  extra=""
+  $recording && extra="$extra --with-recording"
+  $rtk && extra="$extra --with-rtk"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $extra
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $rtk; then
+    echo
+    echo "RTK token-savings synergy is wired into the devkit: verbose Bash is"
+    echo "rewritten to its rtk proxy before it runs (inert when rtk is absent)."
+    echo "Read the savings with /rtk; run 'rtk init' once per repo for RTK's"
+    echo "own CLAUDE.md instruction block."
   fi
   cat <<NEXT
 
@@ -98,13 +109,21 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  extra=""
+  $recording && extra="$extra --with-recording"
+  $rtk && extra="$extra --with-rtk"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $extra
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $rtk; then
+    echo
+    echo "RTK token-savings synergy is wired into the devkit: verbose Bash is"
+    echo "rewritten to its rtk proxy before it runs (inert when rtk is absent)."
+    echo "Read the savings with /rtk; run 'rtk init' once per repo for RTK's"
+    echo "own CLAUDE.md instruction block."
   fi
   cat <<NEXT
 
@@ -169,6 +188,18 @@ if [ "$mode" = repo ]; then
       printf '\n# --- Session transcripts (remove this line to commit them) ---\ndocs/sessions/\n' >> "$target/.gitignore"
     fi
   fi
+  if $rtk; then
+    # The RTK rewrite hook and skill live in the devkit's hooks.json, built with
+    # --with-rtk; a repo only enables the plugin, so there is nothing per-repo to
+    # wire — just fail loud if the devkit was built without it.
+    if [ ! -f "$ws/$plugin_name/skills/rtk-savings/SKILL.md" ]; then
+      echo "error: this devkit was built without the RTK synergy." >&2
+      echo "       Rebuild it: $0 --workspace $ws --with-rtk" >&2
+      exit 66
+    fi
+    echo "  note           RTK synergy comes from the devkit; run 'rtk init' here"
+    echo "                 for RTK's CLAUDE.md block, read savings with /rtk"
+  fi
   echo "  wire           .claude/settings.json -> $plugin_name"
   python3 - "$target" "$rel" "$plugin_name" <<'WIRE'
 import json, sys
@@ -217,30 +248,37 @@ copy() { # copy <relative-path>
 
 echo "Template : $TEMPLATE_DIR"
 echo "Target   : $target"
-$recording && echo "Options  : session recording"
+opts=""
+$recording && opts="$opts session recording,"
+$rtk && opts="$opts RTK token savings,"
+[ -n "$opts" ] && echo "Options  :${opts%,}"
 $dry && echo "Mode     : dry run, nothing will be written"
 echo
 
 ( cd "$PAYLOAD" && find . -type f ! -name gitignore.append -printf '%P\n' | sort ) \
   | while read -r rel; do copy "$rel"; done
 
-# Optional: the session recorder.
+OPTIONAL="$TEMPLATE_DIR/optional"
+copy_optional() { # copy_optional <relative-path> — from optional/, never overwrites
+  local rel="$1" src="$OPTIONAL/$rel" dst="$target/$rel"
+  if [ -e "$dst" ]; then echo "  skip (exists)  $rel"; return; fi
+  say "install        $rel"
+  $dry && return
+  mkdir -p "$(dirname "$dst")"
+  cp "$src" "$dst"
+  case "$rel" in *.py) chmod +x "$dst" ;; esac
+}
+
+# Optional: the session recorder. Copy only its own files — the optional/ tree
+# now holds more than one feature.
 if $recording; then
-  OPTIONAL="$TEMPLATE_DIR/optional"
-  ( cd "$OPTIONAL" && find . -type f -printf '%P\n' | sort ) \
-    | while read -r rel; do
-        src="$OPTIONAL/$rel" dst="$target/$rel"
-        if [ -e "$dst" ]; then
-          echo "  skip (exists)  $rel"
-        else
-          say "install        $rel"
-          if ! $dry; then
-            mkdir -p "$(dirname "$dst")"
-            cp "$src" "$dst"
-            case "$rel" in *.py) chmod +x "$dst" ;; esac
-          fi
-        fi
-      done
+  for rel in \
+    .claude/session-recording.json \
+    .claude/commands/recording.md \
+    .claude/hooks/session-recorder.py \
+    .claude/skills/session-recording/SKILL.md; do
+    copy_optional "$rel"
+  done
   say "wire           session-recorder hooks into .claude/settings.json"
   $dry || python3 - "$target" <<'WIRE'
 import json, sys
@@ -281,6 +319,41 @@ settings.write_text(json.dumps(cfg, indent=2) + "\n")
 WIRE
 fi
 
+# Optional: RTK token-savings synergy. Copy the skill and command, then append
+# the rewrite hook to PreToolUse — LAST, so the safety guards see the raw
+# command first. No script ships; RTK is its own binary.
+if $rtk; then
+  for rel in \
+    .claude/commands/rtk.md \
+    .claude/skills/rtk-savings/SKILL.md; do
+    copy_optional "$rel"
+  done
+  say "wire           rtk rewrite hook into .claude/settings.json (PreToolUse)"
+  $dry || python3 - "$target" <<'WIRE'
+import json, sys
+from pathlib import Path
+
+settings = Path(sys.argv[1]) / ".claude" / "settings.json"
+cfg = json.loads(settings.read_text()) if settings.is_file() else {}
+hooks = cfg.setdefault("hooks", {})
+pre = hooks.setdefault("PreToolUse", [])
+if not any(h.get("name") == "rtk-hook" for e in pre for h in e.get("hooks", [])):
+    pre.append({
+        "_why": "Optional RTK token savings. Rewrites a verbose Bash command to "
+                "its token-optimised `rtk` proxy before it runs, so the output "
+                "reaching the context window is 60-90% smaller. Appended last, so "
+                "the safety guards evaluate the raw command first and a denied "
+                "command is never rewritten. Inert when `rtk` is not on PATH. "
+                "See the rtk-savings skill; read savings with /rtk.",
+        "matcher": "Bash",
+        "hooks": [{"type": "command", "name": "rtk-hook",
+                   "command": "sh -c 'command -v rtk >/dev/null 2>&1 "
+                              "&& exec rtk hook claude || true'",
+                   "timeout": 10000}]})
+settings.write_text(json.dumps(cfg, indent=2) + "\n")
+WIRE
+fi
+
 # .gitignore is appended to, not replaced.
 if [ -f "$PAYLOAD/gitignore.append" ]; then
   if [ -f "$target/.gitignore" ] && grep -q "Claude Code" "$target/.gitignore" 2>/dev/null; then
@@ -310,5 +383,6 @@ That command reads the codebase, interviews you layer by layer, writes the
 project CLAUDE.md and rules, and presents what it covers until you confirm it.
 
 Not installed with --with-recording and want session transcripts later? Re-run
-this installer with the flag; it adds only what is missing.
+this installer with the flag; it adds only what is missing. Same for --with-rtk,
+which wires RTK token savings (needs the `rtk` binary on PATH to do anything).
 NEXT

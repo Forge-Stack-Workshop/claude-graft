@@ -251,6 +251,44 @@ is missing and never duplicates the hook wiring.
 
 ---
 
+## RTK token savings — optional
+
+`--with-rtk` wires [RTK](https://github.com/dhamidi/rtk) (Rust Token Killer)
+into the setup. RTK is a local CLI proxy that **filters a command's output
+before it reaches the context window** — a test run collapses to its failures,
+`git diff` to its changed lines, `ls`/`read`/`grep` to a compact form —
+typically 60–90% fewer tokens for the same information.
+
+The flag adds two things. A **skill** (`rtk-savings`) that teaches the prefix
+rule — reach for `rtk git`, `rtk pytest`, `rtk ls`, `rtk gh` instead of the raw
+command — and how to read what was saved. And a **PreToolUse hook** that does it
+mechanically: it rewrites a verbose Bash command to its `rtk` proxy before the
+command runs, so the saving happens even when the rule is forgotten.
+
+The hook is appended **last** on `PreToolUse`, on purpose. The safety guards —
+the secret scanner, the git-safety backstop — evaluate the raw command first; a
+command one of them denies is never rewritten. And the whole thing is **inert
+where `rtk` is not on `PATH`**: the guard exits without output and the command
+runs unchanged, so a devkit built with `--with-rtk` is safe to share with a
+machine that has never installed RTK.
+
+RTK is offline by design — a local binary, a local SQLite history, no network —
+so it sits with the offline-first standard rather than against it. One caveat
+worth stating: `rtk pytest` on the host is still a host invocation, so where the
+doctrine runs tests and lint through Docker or pre-commit, that rule stands —
+use RTK on the read-and-inspect commands, and on the test output *inside* the
+sanctioned wrapper.
+
+Read the savings with `/rtk` (`rtk gain -p`, `rtk cc-economics`, `rtk
+discover`). Run `rtk init` once in a repo to add RTK's own instruction block to
+`CLAUDE.md`, and `Bash(rtk *)` to the project's permissions if you want the
+rewritten commands to run unprompted.
+
+Not installed at first? Re-run the installer with `--with-rtk` — it adds only
+what is missing and never duplicates the hook.
+
+---
+
 ## Validate it yourself
 
 ```bash
