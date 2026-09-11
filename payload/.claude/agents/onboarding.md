@@ -1,4 +1,5 @@
 ---
+name: onboarding
 description: First-run experience — activation flows, empty states, interactive tutorials, onboarding emails, time-to-value.
 model: sonnet
 ---
