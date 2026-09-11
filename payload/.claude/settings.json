@@ -40,10 +40,60 @@
             "timeout": 5000
           }
         ]
+      },
+      {
+        "_why": "Mechanical backstop for destructive git: force push, hard reset, force branch delete, remote-branch delete, `clean -f`, `checkout -f`. Carries a `permissionDecision: deny` when it fires — instruction cannot override it.",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "git-safety-guard",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/git-safety-guard.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "_why": "Circuit breaker for external API calls (curl/wget/fetch/requests) made from Bash. Blocks a call whose per-endpoint circuit is OPEN so a failing dependency is not hammered. Recording of outcomes to open a circuit is not yet wired (needs a PostToolUse companion) — see hooks/README.md.",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "circuit-breaker",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/circuit-breaker.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+
+    "UserPromptSubmit": [
+      {
+        "_why": "Detects frustration/debug markers or continuation requests (bilingual FR/EN) and injects a style adjustment via additionalContext. Never blocks (exit 0 always).",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "frustration-detection",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/frustration-detection.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "timeout": 5000
+          }
+        ]
       }
     ],
 
     "PostToolUse": [
+      {
+        "_why": "Keeps the code knowledge graph current: runs `graphify update .` after a write instead of relying on the agent to remember. Fire-and-forget, AST-only, no API cost; skips silently when graphify is absent.",
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "graphify-sync",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/graphify-sync.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "timeout": 10000
+          }
+        ]
+      },
       {
         "_why": "Surfaces size and complexity drift against .claude/thresholds.json at the moment code is written. WARNS only, never blocks: friction while exploring costs more than it buys. CI is where these become gates.",
         "matcher": "Write|Edit|MultiEdit",
