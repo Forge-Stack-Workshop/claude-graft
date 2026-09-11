@@ -1,4 +1,5 @@
 ---
+name: monitoring
 description: Observability — error-tracking SDKs, uptime monitoring, structured JSON logging, SLO/SLI, alert rules, error budgets.
 model: haiku
 ---
