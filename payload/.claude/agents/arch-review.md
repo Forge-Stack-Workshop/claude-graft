@@ -1,4 +1,5 @@
 ---
+name: arch-review
 description: Reviews layer boundaries, ADR coverage, framework leaks into wrong layers. Outputs APPROVED / CHANGES REQUESTED before merge.
 model: sonnet
 tools: Read, Grep, Glob, Bash, WebFetch, WebSearch, Skill
