@@ -1,4 +1,5 @@
 ---
+name: automation
 description: Scheduled jobs and orchestration — task queues + beat schedulers, cron pipelines, idempotency, dead-letter queues. Connectors belong to an integration agent.
 model: sonnet
 ---
