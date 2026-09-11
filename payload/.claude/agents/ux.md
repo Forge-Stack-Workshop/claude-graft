@@ -2,6 +2,7 @@
 name: ux
 description: Design system and UX — shared components (cva, Radix), tokens, dark mode, i18n, WCAG 2.1 AA. From simple screen implementation to accessibility audits.
 model: sonnet
+tools: Read, Write, Edit, Glob, Grep
 ---
 
 # Agent: UX / Frontend
