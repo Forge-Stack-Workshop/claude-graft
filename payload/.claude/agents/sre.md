@@ -2,6 +2,7 @@
 name: sre
 description: Operational reliability — incident response, SLOs, runbooks, capacity planning, disaster recovery. From cluster to infra, packaging to deploy.
 model: sonnet
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Agent: Site Reliability Engineer
