@@ -177,13 +177,26 @@ def build(workspace: Path, devkit: Path, name: str,
                        "path-scoped conventions, scaffolding and flow skills, "
                        "review agents, and the write-time guards.",
         "version": template_version(),
+        "keywords": ["claude-code", "doctrine", "hooks", "skills", "agents",
+                     "conventions", "guardrails", "template"],
+        "homepage": "https://github.com/Forge-Stack-Workshop/claude-graft",
+        "repository": "https://github.com/Forge-Stack-Workshop/claude-graft",
+        "license": "MIT",
+        "category": "workflow",
     }, indent=2) + "\n")
 
     (plugin / ".claude-plugin" / "marketplace.json").write_text(json.dumps({
         "name": name,
         "owner": {"name": "workspace"},
-        "plugins": [{"name": name, "source": "./", "description":
-                     "Workspace engineering doctrine."}],
+        "metadata": {
+            "description": "Workspace engineering doctrine, built from claude-graft.",
+            "version": template_version(),
+        },
+        "plugins": [{"name": name, "source": "./",
+                     "description": "Workspace engineering doctrine.",
+                     "keywords": ["claude-code", "doctrine", "guardrails",
+                                  "conventions"],
+                     "category": "workflow"}],
     }, indent=2) + "\n")
 
     # The always-loaded doctrine lives in the devkit and is exposed to the
