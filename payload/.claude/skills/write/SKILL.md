@@ -8,9 +8,6 @@ metadata:
 
 # Write: Cut the AI Taste
 
-Prefix your first line with 🥷 inline, not as its own paragraph.
-
-
 Strip AI patterns from prose and rewrite it to sound human. Do not improve vocabulary; remove the performance of improvement.
 
 ## Pre-flight
