@@ -1,4 +1,5 @@
 ---
+name: arch
 description: Generic architecture — system design, ADRs, cross-repo consistency, technical debt.
 model: opus
 ---
