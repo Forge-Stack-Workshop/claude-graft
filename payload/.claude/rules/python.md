@@ -44,3 +44,31 @@ answers to "what does this need", and they diverge.
   the interchange format, not a second source.
 - Everything runs in the container — `uv` on the host is not the workflow. See
   `environment.md`.
+
+## Structure and call style
+
+- **Object-oriented, one class per file.** A cohesive responsibility (a service,
+  a repository, an adapter, a use case, a value object) is a class; dependencies
+  are injected through `__init__` and state lives on the instance. One class per
+  module, the module named after it — `vehicle_dispatcher.py` holds
+  `VehicleDispatcher` and nothing else of substance. Pure functions stay
+  legitimate where there is genuinely no state; a `utils.py` grab-bag and two
+  unrelated public classes in one file are not. Method order follows
+  `class-design.md`.
+- **Import the item, not the module — `from x import y; y()`.** Call sites read
+  `datetime.now()` and `BillingService(...)`, not `datetime.datetime.now()` or a
+  chain of package prefixes. Bare `import x` is reserved for a module used as a
+  meaningful namespace (`import json`, `import numpy as np`) or to break an import
+  cycle. Forbidden: wildcard `from x import *`, and importing a module only to
+  reach one attribute through it. `ruff` (`I` rules) owns import ordering.
+- **Call with named arguments; positional call sites are the exception.** A call
+  reads `create_user(name="Ada", role=Role.ADMIN, active=True)`, never
+  `create_user("Ada", Role.ADMIN, True)`. Definitions force it where it matters:
+  any function taking more than one parameter, or **any** boolean/optional
+  parameter, declares them keyword-only with a bare `*`
+  (`def build(*, source: Source, strict: bool = False)`) — so callers must name
+  them and adding a parameter never shifts an existing positional meaning. Narrow
+  allowed exceptions: a single obvious argument (`len(items)`, `Path(raw)`), a
+  dunder receiver, and genuine `*args`/`**kwargs` pass-through. A signature that
+  needs many named primitives is still primitive obsession — the fix is a value
+  object, then one named argument carries it.
