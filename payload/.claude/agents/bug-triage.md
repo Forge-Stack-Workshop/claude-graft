@@ -1,4 +1,5 @@
 ---
+name: bug-triage
 description: Classify, prioritise, dedupe and route bug reports; assign severity and owner. Raw feedback intake and root-cause analysis are handled elsewhere.
 model: sonnet
 ---
