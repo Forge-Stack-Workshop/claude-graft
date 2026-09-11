@@ -26,7 +26,8 @@ effort: medium
 
 - Check the argument passed to the skill
 - If `en` or `english` → tables and summary in English
-- If `fr`, `french`, or no argument → French (default)
+- If `fr` or `french` → tables and summary in French
+- If no argument → respond in the repository's language, defaulting to English
 - Note: GitHub comments (Phase 3) are ALWAYS in English (international audience)
 
 ---
