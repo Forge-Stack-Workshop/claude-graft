@@ -51,7 +51,7 @@ repo/
     ├── settings.json         hook wiring, each hook with its `_why`
     ├── thresholds.json       numeric limits, confirmed per project
     ├── rules/                the conventions
-    ├── skills/               project-scaffold · feature-flow
+    ├── skills/               project-scaffold · feature-flow · data-model-map · project-memory
     ├── agents/               flow-tracer · conformance-reviewer
     ├── commands/             /project-init /code-flow /commit /folder-readme
     ├── tools/                which-rules.py · check-template.py
