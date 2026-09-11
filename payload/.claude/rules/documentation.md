@@ -31,6 +31,23 @@ file in a folder that has no `README.md`. Editing a file that is already there
 only warns — that debt predates your change. Configure it in
 `.claude/folder-readme.json`.
 
+## Every repo ships generated context files
+
+A standard, vendor-neutral context set makes every repo self-describing for a
+fresh agent or a returning owner:
+
+- `handover.md` — what the repo is, its place in the ecosystem, its standards
+  dependency, its ADRs, and current state.
+- `context-map.json` — a machine-readable map (entry points, key dirs, contracts,
+  dependencies), with **no assistant-specific format or vendor name**.
+- `llms-full.txt` — a technical digest built from the real code and config.
+- `ai-instructions.md` — working instructions that *point* to the repo's agent
+  views and the canon, never fork them.
+
+They are **generated from the repo, never hand-filled**, and drift-gated exactly
+like any other generated artefact: a stale context file fails the gate, it does
+not mislead the next reader.
+
 ## The documentation site
 
 Prose documentation lives in a MkDocs site under `docs/` — see `mkdocs.md` for
