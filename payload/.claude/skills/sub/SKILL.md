@@ -1,4 +1,5 @@
 ---
+name: sub
 description: Toggle llmtrim subscription rerouting for this Claude Code window only.
 disable-model-invocation: true
 argument-hint: "on [codex|kimi|grok]|off|status"
