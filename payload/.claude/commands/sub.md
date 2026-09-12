@@ -1,10 +1,8 @@
 ---
-name: sub
 description: Toggle llmtrim subscription rerouting for this Claude Code window only.
 disable-model-invocation: true
 argument-hint: "on [codex|kimi|grok]|off|status"
-allowed-tools: Bash('/home/anthony/.local/bin/llmtrim' window-sub slash *)
----
+allowed-tools: Bash('llmtrim' window-sub slash *)---
 
 <!-- llmtrim-owned-window-sub -->
 Window-local subscription override (does not change other windows or the global
@@ -15,4 +13,4 @@ Window-local subscription override (does not change other windows or the global
 - `/sub off` — force Anthropic (with compression) for this window
 - `/sub status` — show this window's override
 
-!`'/home/anthony/.local/bin/llmtrim' window-sub slash "$ARGUMENTS"`
+!`'llmtrim' window-sub slash "$ARGUMENTS"`
