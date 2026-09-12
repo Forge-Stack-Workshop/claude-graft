@@ -2,7 +2,8 @@
 description: Toggle llmtrim subscription rerouting for this Claude Code window only.
 disable-model-invocation: true
 argument-hint: "on [codex|kimi|grok]|off|status"
-allowed-tools: Bash('llmtrim' window-sub slash *)---
+allowed-tools: Bash('llmtrim' window-sub slash *)
+---
 
 <!-- llmtrim-owned-window-sub -->
 Window-local subscription override (does not change other windows or the global
