@@ -1,4 +1,7 @@
-# Skill: Security Review
+---
+name: security-review
+description: Use when reviewing a PR before merge or touching auth, user input, SQL/shell, dependencies, secrets/config, a new endpoint, or a Dockerfile/CI workflow — runs the OWASP Top 10 + secrets + container/CI checklist and reports SECURE or CHANGES NEEDED with severity-ranked findings. Triggers on "security", "OWASP", "vulnerability", "hardening", "audit".
+---
 
 ## When to invoke
 
