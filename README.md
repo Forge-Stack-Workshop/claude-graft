@@ -244,6 +244,7 @@ Modules shipped today (`./install.sh --help` lists them live):
 | `guardrails` | PreToolUse hook: block a mutating `gh` under the wrong account, remind about pytest flags. Config-driven, inert until filled. |
 | `workflow-commands` | `/inbox-triage` `/notion-recon` `/notion-weekly` `/sentry-fix` `/slop-check`, all driven by `workflow-commands.config.json` (no secrets inline). |
 | `recommendations` | reference-only `recommended-plugins.md` + token-free `recommended-mcp.json`. |
+| `rtk` | rewrite verbose Bash to the offline `rtk` proxy (60-90% smaller output); ships the skill + `/rtk`; inert unless `rtk` is on PATH. |
 
 Every module **fails open** and ships **no credentials** — token-bearing
 integrations reference an env-var name and stop if their config is a placeholder.

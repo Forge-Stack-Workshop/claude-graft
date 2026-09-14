@@ -23,6 +23,7 @@ Manifest schema (optional/<id>/module.json):
                                 command uses the literal token ${ROOT}, replaced
                                 with the runtime plugin/project root by the caller
   gitignore: [lines]            optional
+  order: int                    optional hook-append order (default 50; higher = later)
   notes: string                 optional post-install message
 
 The ${ROOT} token keeps a hook command identical in both topologies; the caller
@@ -142,10 +143,10 @@ def apply(root: Path, module_ids: list[str], root_token: str,
     gitignore: list[str] = []
     notes: list[str] = []
 
-    for mid in module_ids:
-        m = by_id.get(mid)
-        if not m:
-            continue
+    ordered = sorted([i for i in module_ids if i in by_id],
+                     key=lambda i: (by_id[i].get('order', 50), i))
+    for mid in ordered:
+        m = by_id[mid]
         mdir: Path = m["_dir"]
         for f in m.get("files", []):
             if config_only and f["dst"].startswith("hooks/"):
