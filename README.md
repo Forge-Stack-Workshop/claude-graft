@@ -39,6 +39,7 @@ affect another's.
 ./install.sh /path/to/repo --dry              # see what would happen
 ./install.sh /path/to/repo                    # install
 ./install.sh /path/to/repo --with-recording   # + session transcripts
+./install.sh /path/to/repo --with-workflow-commands  # + Notion/Sentry ops commands
 cd /path/to/repo && claude
 /project-init
 ```
@@ -248,6 +249,25 @@ passes straight through.
 
 Not installed at first? Re-run the installer with the flag — it adds only what
 is missing and never duplicates the hook wiring.
+
+---
+
+## Workflow commands — optional
+
+`--with-workflow-commands` adds five **config-driven** ops commands plus a
+`workflow-commands.config.json` you fill in once:
+
+- `/inbox-triage` — triage a Notion inbox into routed, project-connected tasks.
+- `/notion-recon` — reconcile a Notion projects DB against real git remotes.
+- `/notion-weekly` — read-only weekly portfolio digest.
+- `/sentry-fix` — Sentry issue → diagnose → TDD fix → linked ticket + PR.
+- `/slop-check` — run a design-slop detector (no-op if the binary is absent).
+
+The commands read `workflow-commands.config.json` (database ids, hosts, ticketing
+system) so the same code works on any project. **No secrets are stored** — tokens
+are referenced by environment-variable name (`NOTION_TOKEN`, `SENTRY_TOKEN`, …),
+never inline. A command whose required config is still a placeholder stops and
+asks rather than guessing.
 
 ---
 

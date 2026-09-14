@@ -86,7 +86,7 @@ def git_root(path: Path) -> Path | None:
 
 
 def build(workspace: Path, devkit: Path, name: str,
-          recording: bool = False) -> None:
+          recording: bool = False, workflow_commands: bool = False) -> None:
     # The devkit repository holds more than Claude; the configuration takes one
     # subdirectory of it rather than colonising its root.
     repo = git_root(devkit)
@@ -141,6 +141,14 @@ def build(workspace: Path, devkit: Path, name: str,
         shutil.copytree(opt / "skills" / "session-recording",
                         plugin / "skills" / "session-recording", dirs_exist_ok=True)
         shutil.copy2(opt / "commands" / "recording.md", plugin / "commands")
+
+    # Optional: workflow commands (config-driven) + their config file.
+    if workflow_commands:
+        opt = TEMPLATE / "optional" / ".claude"
+        for c in ("inbox-triage", "notion-recon", "notion-weekly", "sentry-fix", "slop-check"):
+            shutil.copy2(opt / "commands" / f"{c}.md", plugin / "commands" / f"{c}.md")
+        shutil.copy2(opt / "workflow-commands.config.json",
+                     plugin / "workflow-commands.config.json")
 
     settings = json.loads((PAYLOAD / "settings.json").read_text())
     hooks = settings.get("hooks", {})
@@ -285,7 +293,7 @@ def build(workspace: Path, devkit: Path, name: str,
     print(f"repos       untouched — no CLAUDE.md, no .claude/, nothing")
 
 
-def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
+def parse(argv: list[str]) -> tuple[Path, Path, str, bool, bool]:
     flags = {"--name", "--devkit"}
     positional, opts, skip = [], {}, False
     for i, a in enumerate(argv):
@@ -309,7 +317,8 @@ def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
     if workspace not in devkit.parents and devkit != workspace:
         raise SystemExit(f"--devkit must live inside the workspace ({workspace})")
     name = opts.get("--name") or (git_root(devkit) or devkit).name
-    return workspace, devkit, name, "--with-recording" in argv
+    return (workspace, devkit, name,
+            "--with-recording" in argv, "--with-workflow-commands" in argv)
 
 
 if __name__ == "__main__":

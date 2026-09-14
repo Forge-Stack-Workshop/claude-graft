@@ -1,0 +1,34 @@
+{
+  "_why": "Config for the optional workflow commands (--with-workflow-commands). The commands read THIS file so the same command code works on any project. Fill in your own ids/hosts; put SECRETS in environment variables named here, never inline. Any command whose required config is absent must say so and stop — it must not invent ids or run against the wrong workspace.",
+
+  "notion": {
+    "token_env": "NOTION_TOKEN",
+    "projects_db_id": "<notion-projects-database-id>",
+    "tasks_db_id": "<notion-tasks-database-id>",
+    "inbox_db_id": "<notion-inbox-database-id>",
+    "note": "Prefer the REST API with $NOTION_TOKEN over the Notion MCP for freshness; the MCP can serve a stale cache."
+  },
+
+  "sentry": {
+    "host": "<sentry-host, e.g. sentry.example.com>",
+    "token_env": "SENTRY_TOKEN"
+  },
+
+  "ticketing": {
+    "system": "none",
+    "_options": "shortcut | github-issues | none",
+    "shortcut": {
+      "token_env": "SHORTCUT_API_TOKEN",
+      "workspace_slug": "<shortcut-workspace-slug>",
+      "link_convention": "Mentioning sc-<story_id> in a PR title/body auto-links Shortcut<->GitHub when the integration is enabled."
+    },
+    "github_issues": {
+      "link_convention": "Use 'Fixes #<issue>' in the PR body."
+    }
+  },
+
+  "slop_check": {
+    "detector_command": "impeccable",
+    "note": "External design-slop detector. If the binary is absent the command is a no-op and says so."
+  }
+}

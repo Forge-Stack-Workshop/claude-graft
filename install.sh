@@ -5,6 +5,7 @@
 #   ./install.sh /path/to/repo
 #   ./install.sh /path/to/repo --dry             show what would happen
 #   ./install.sh /path/to/repo --with-recording  also install the session recorder
+#   ./install.sh /path/to/repo --with-workflow-commands  also add /inbox-triage /notion-* /sentry-fix /slop-check
 #
 # Multi-repo workspace — the doctrine is central to THIS project, never to the
 # machine, so changing one project's Claude never touches another's:
@@ -30,6 +31,7 @@ PAYLOAD="$TEMPLATE_DIR/payload"
 target=""
 dry=false
 recording=false
+workflow_commands=false
 mode=mono
 next_is_name=false
 next_is_devkit=false
@@ -41,6 +43,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry)            dry=true ;;
     --with-recording) recording=true ;;
+    --with-workflow-commands) workflow_commands=true ;;
     --workspace)      mode=workspace ;;
     --devkit)         next_is_devkit=true ;;
     --name)           next_is_name=true ;;
@@ -50,8 +53,8 @@ for arg in "$@"; do
 done
 
 if [ -z "$target" ]; then
-  echo "usage: $0 <repo> [--dry] [--with-recording]" >&2
-  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording]" >&2
+  echo "usage: $0 <repo> [--dry] [--with-recording] [--with-workflow-commands]" >&2
+  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording] [--with-workflow-commands]" >&2
   exit 64
 fi
 
@@ -62,13 +65,18 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  build_flags=""
+  $recording && build_flags="$build_flags --with-recording"
+  $workflow_commands && build_flags="$build_flags --with-workflow-commands"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $build_flags
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $workflow_commands; then
+    echo
+    echo "Workflow commands added to the devkit (edit claude/workflow-commands.config.json)."
   fi
   cat <<NEXT
 
@@ -98,13 +106,18 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  build_flags=""
+  $recording && build_flags="$build_flags --with-recording"
+  $workflow_commands && build_flags="$build_flags --with-workflow-commands"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $build_flags
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $workflow_commands; then
+    echo
+    echo "Workflow commands added to the devkit (edit claude/workflow-commands.config.json)."
   fi
   cat <<NEXT
 
@@ -218,6 +231,7 @@ copy() { # copy <relative-path>
 echo "Template : $TEMPLATE_DIR"
 echo "Target   : $target"
 $recording && echo "Options  : session recording"
+$workflow_commands && echo "Options  : workflow commands"
 $dry && echo "Mode     : dry run, nothing will be written"
 echo
 
@@ -279,6 +293,20 @@ for event in ("SessionStart", "PostToolUse", "Stop", "SessionEnd"):
 
 settings.write_text(json.dumps(cfg, indent=2) + "\n")
 WIRE
+fi
+
+# Optional: workflow commands + their config.
+if $workflow_commands; then
+  OPTIONAL="$TEMPLATE_DIR/optional"
+  mkdir -p "$target/.claude/commands"
+  for c in inbox-triage notion-recon notion-weekly sentry-fix slop-check; do
+    src="$OPTIONAL/.claude/commands/$c.md" dst="$target/.claude/commands/$c.md"
+    if [ -e "$dst" ]; then echo "  skip (exists)  .claude/commands/$c.md"
+    else say "install        .claude/commands/$c.md"; $dry || cp "$src" "$dst"; fi
+  done
+  cfg="$target/.claude/workflow-commands.config.json"
+  if [ -e "$cfg" ]; then echo "  skip (exists)  .claude/workflow-commands.config.json"
+  else say "install        .claude/workflow-commands.config.json (fill in your ids)"; $dry || cp "$OPTIONAL/.claude/workflow-commands.config.json" "$cfg"; fi
 fi
 
 # .gitignore is appended to, not replaced.
