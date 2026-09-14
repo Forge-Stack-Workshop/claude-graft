@@ -1,0 +1,15 @@
+{
+  "_why": "Config for the optional guardrails PreToolUse hook (--with-guardrails). Both checks are INERT until you fill these in. No secrets here — only org/account names and pytest flags.",
+
+  "gh_account": {
+    "_why": "Block a mutating `gh` command when the repo's origin is one of these orgs but the active gh account is not required_account. Leave placeholders to disable.",
+    "orgs": ["<your-github-org>"],
+    "required_account": "<your-gh-account>"
+  },
+
+  "pytest_reminder": {
+    "_why": "Non-blocking reminder when a pytest run omits flags this codebase tends to need.",
+    "enabled": false,
+    "flags": ["-p no:query_optimizer", "--no-cov"]
+  }
+}

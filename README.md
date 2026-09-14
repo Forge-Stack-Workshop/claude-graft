@@ -37,8 +37,9 @@ affect another's.
 
 ```bash
 ./install.sh /path/to/repo --dry              # see what would happen
-./install.sh /path/to/repo                    # install
-./install.sh /path/to/repo --with-recording   # + session transcripts
+./install.sh /path/to/repo                    # install (interactive module picker on a TTY)
+./install.sh /path/to/repo --with all         # + every optional module
+./install.sh /path/to/repo --with ape,guardrails   # + a chosen subset
 cd /path/to/repo && claude
 /project-init
 ```
@@ -215,39 +216,37 @@ so there is nothing generic to install. `/project-init` asks instead.
 
 ---
 
-## Session recording — optional
+## Optional modules — choose what you install
 
-`--with-recording` renders each session as a **conversation** under
-`docs/sessions/`: what the human typed and what Claude put on screen, in order,
-and nothing else. Reasoning, tool calls and their results are left out — they
-are how an answer was produced, not the answer, and they bury the exchange a
-reader came for.
+Beyond the always-on doctrine, capabilities are **opt-in modules**. Run the
+installer without `--with` on a terminal for an interactive picker, or select
+non-interactively:
 
-It reads Claude's own transcript rather than reconstructing from hook events,
-because assistant prose appears in neither `UserPromptSubmit` nor `PostToolUse`
-— a reconstruction loses half the exchange. And it writes **while the session
-runs**: after every turn, plus mid-turn at most once every
-`min_interval_seconds`, so a long turn does not leave the file empty for its
-whole duration.
+```bash
+./install.sh /repo --with all                 # every module
+./install.sh /repo --with ape,guardrails      # a subset
+./install.sh /repo --with none                # doctrine only
+./install.sh --workspace /ws --devkit /ws/dk --with all   # workspace too
+```
 
-Two situations justify it. **Transparency**: an interview, an audit, a client
-engagement, where what the AI did must be inspectable rather than asserted.
-**Continuity**: on the next `SessionStart` the recorder replays the tail of the
-previous session, so a developer returning after two weeks is back in context
-without re-reading their own code.
+Each module is a **self-describing directory** under `optional/<id>/` with a
+`module.json` manifest (files to copy, hooks to wire, gitignore lines, a note).
+`install.sh` and `build-plugin.py` read that one registry — **adding a capability
+is adding one directory**, no installer edit. The same `${ROOT}` hook command
+works in both topologies (plugin root in a workspace, `.claude/` in a repo).
 
-Control it mid-session with `/recording status | on | off | pause | resume`.
-Pausing is the honest tool for a passage that should not be recorded; editing a
-rendered transcript afterwards is not, since an edited transcript proves
-nothing.
+Modules shipped today (`./install.sh --help` lists them live):
 
-Transcripts are **gitignored by default** — commit them deliberately, after
-reading one. Known key shapes are redacted (Anthropic, AWS, GitHub, Slack, JWT,
-private keys); that is a net, not a guarantee, and a password typed as prose
-passes straight through.
+| id | what it adds |
+| --- | --- |
+| `recording` | render each session as a readable conversation under `docs/sessions/`; control with `/recording`. Transcripts gitignored by default. |
+| `ape` | UserPromptSubmit hook that reframes a raw prompt before Claude acts; fails open, `!ape` to skip. |
+| `guardrails` | PreToolUse hook: block a mutating `gh` under the wrong account, remind about pytest flags. Config-driven, inert until filled. |
+| `workflow-commands` | `/inbox-triage` `/notion-recon` `/notion-weekly` `/sentry-fix` `/slop-check`, all driven by `workflow-commands.config.json` (no secrets inline). |
+| `recommendations` | reference-only `recommended-plugins.md` + token-free `recommended-mcp.json`. |
 
-Not installed at first? Re-run the installer with the flag — it adds only what
-is missing and never duplicates the hook wiring.
+Every module **fails open** and ships **no credentials** — token-bearing
+integrations reference an env-var name and stop if their config is a placeholder.
 
 ---
 

@@ -1,0 +1,12 @@
+{
+  "id": "recommendations",
+  "title": "Recommended plugins & MCP",
+  "description": "Reference-only shortlist: recommended-plugins.md (public plugins/marketplaces) + recommended-mcp.json (token-free MCP servers). Installs nothing itself.",
+  "default": false,
+  "files": [
+    {"src": "recommended-plugins.md", "dst": "recommended-plugins.md"},
+    {"src": "recommended-mcp.json", "dst": "recommended-mcp.json"}
+  ],
+  "hooks": [],
+  "notes": "Recommended plugins/MCP docs added (recommended-plugins.md + recommended-mcp.json). No credentials shipped."
+}

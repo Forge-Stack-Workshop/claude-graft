@@ -1,0 +1,16 @@
+{
+  "id": "guardrails",
+  "title": "Guardrails hook (gh-account / pytest)",
+  "description": "Config-driven PreToolUse(Bash) hook: block a mutating gh command under the wrong account; remind about pytest flags. Fails open, inert until configured.",
+  "default": false,
+  "files": [
+    {"src": "hooks/guardrails.py", "dst": "hooks/guardrails.py", "chmod": true},
+    {"src": "guardrails.config.json", "dst": "guardrails.config.json"}
+  ],
+  "hooks": [
+    {"event": "PreToolUse", "matcher": "Bash", "name": "guardrails", "timeout": 6000,
+     "command": "sh -c 'f=\"${ROOT}/hooks/guardrails.py\"; [ ! -f \"$f\" ] || python3 \"$f\"'",
+     "why": "Optional guardrails. Blocks a mutating gh command run under the wrong account (per guardrails.config.json) and reminds about project pytest flags. Fails open; inert until the config is filled."}
+  ],
+  "notes": "Guardrails hook added. Edit .claude/guardrails.config.json (orgs + required account + pytest flags) to enable."
+}

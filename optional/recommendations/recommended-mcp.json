@@ -1,0 +1,16 @@
+{
+  "_why": "Optional, token-free MCP servers worth enabling in most projects. Copied verbatim into a project's .claude/ by `install.sh --with-recommendations`. These two are stdio (npx) and carry NO credentials, so they are safe to share. Servers that need an auth token (Home Assistant, hosted HTTP endpoints, etc.) are deliberately NOT listed here — add them yourself with your own secret, never commit the token.",
+  "mcpServers": {
+    "skillsmith": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@skillsmith/mcp-server"],
+      "env": {}
+    },
+    "claude-code-guide": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "claude-code-ultimate-guide-mcp"]
+    }
+  }
+}

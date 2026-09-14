@@ -4,7 +4,9 @@
 # Mono-repo — the repository carries everything, self-contained and auditable:
 #   ./install.sh /path/to/repo
 #   ./install.sh /path/to/repo --dry             show what would happen
-#   ./install.sh /path/to/repo --with-recording  also install the session recorder
+#   ./install.sh /path/to/repo --with all            install every optional module
+#   ./install.sh /path/to/repo --with ape,guardrails install a chosen subset
+#   (run without --with on a terminal for an interactive picker)
 #
 # Multi-repo workspace — the doctrine is central to THIS project, never to the
 # machine, so changing one project's Claude never touches another's:
@@ -17,8 +19,8 @@
 # Claude is launched at the WORKSPACE ROOT. Member repositories receive nothing
 # — no CLAUDE.md, no .claude/ — and stay clean.
 #
-# Flags combine, in any order. Re-running with --with-recording on an already
-# configured project adds the recorder without touching anything else.
+# Modules are opt-in and composable. Re-running to add a module leaves
+# everything already present untouched.
 #
 # Never overwrites an existing file. Anything already present is reported and
 # skipped, so re-running on a configured project is safe.
@@ -29,7 +31,8 @@ PAYLOAD="$TEMPLATE_DIR/payload"
 
 target=""
 dry=false
-recording=false
+with_arg="__UNSET__"
+next_is_with=false
 mode=mono
 next_is_name=false
 next_is_devkit=false
@@ -38,9 +41,11 @@ devkit_path=claude-devkit
 for arg in "$@"; do
   if $next_is_name; then plugin_name="$arg"; next_is_name=false; continue; fi
   if $next_is_devkit; then devkit_path="$arg"; next_is_devkit=false; continue; fi
+  if $next_is_with; then with_arg="$arg"; next_is_with=false; continue; fi
   case "$arg" in
     --dry)            dry=true ;;
-    --with-recording) recording=true ;;
+    --with)           next_is_with=true ;;
+    --with=*)         with_arg="${arg#--with=}" ;;
     --workspace)      mode=workspace ;;
     --devkit)         next_is_devkit=true ;;
     --name)           next_is_name=true ;;
@@ -49,9 +54,22 @@ for arg in "$@"; do
   esac
 done
 
+
+# Resolve which optional modules to install (registry-driven).
+resolve_modules() {
+  if [ "$with_arg" != "__UNSET__" ]; then
+    python3 "$TEMPLATE_DIR/modules.py" resolve --with "$with_arg" | paste -sd, -
+  elif [ -t 0 ] && [ -t 1 ]; then
+    python3 "$TEMPLATE_DIR/modules.py" resolve --interactive | paste -sd, -
+  else
+    python3 "$TEMPLATE_DIR/modules.py" resolve | paste -sd, -
+  fi
+}
+
 if [ -z "$target" ]; then
-  echo "usage: $0 <repo> [--dry] [--with-recording]" >&2
-  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording]" >&2
+  echo "usage: $0 <repo> [--dry] [--with all|<mod,mod>|none]" >&2
+  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with all|<mod,mod>]" >&2
+  echo "       modules: $(python3 "$TEMPLATE_DIR/modules.py" list | cut -f1 | paste -sd, -)" >&2
   exit 64
 fi
 
@@ -62,14 +80,9 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
-  if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
-    echo
-    echo "Session recording is enabled for the workspace"
-    echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
-  fi
+  MODULES="$(resolve_modules)"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --modules "$MODULES"
+  [ -n "$MODULES" ] && { echo; echo "Optional modules built into the devkit: $MODULES"; }
   cat <<NEXT
 
 The devkit is a repository of its own — commit it, tag it, review changes to the
@@ -98,14 +111,9 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
-  if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
-    echo
-    echo "Session recording is enabled for the workspace"
-    echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
-  fi
+  MODULES="$(resolve_modules)"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --modules "$MODULES"
+  [ -n "$MODULES" ] && { echo; echo "Optional modules built into the devkit: $MODULES"; }
   cat <<NEXT
 
 The devkit is a repository of its own — commit it, tag it, review changes to the
@@ -152,22 +160,15 @@ if [ "$mode" = repo ]; then
     if [ -e "$target/.claude/$f" ]; then echo "  skip (exists)  .claude/$f"
     else echo "  install        .claude/$f"; cp "$PAYLOAD/.claude/$f" "$target/.claude/$f"; fi
   done
-  if $recording; then
-    if [ ! -f "$ws/$plugin_name/hooks/session-recorder.py" ]; then
-      echo "error: this devkit was built without the session recorder." >&2
-      echo "       Rebuild it: $0 --workspace $ws --with-recording" >&2
-      exit 66
-    fi
-    if [ -e "$target/.claude/session-recording.json" ]; then
-      echo "  skip (exists)  .claude/session-recording.json"
-    else
-      echo "  install        .claude/session-recording.json (recording enabled)"
-      cp "$TEMPLATE_DIR/optional/.claude/session-recording.json" "$target/.claude/"
-    fi
-    if [ -f "$target/.gitignore" ] && grep -q "docs/sessions" "$target/.gitignore"; then :; else
-      echo "  append         .gitignore  (docs/sessions/)"
-      printf '\n# --- Session transcripts (remove this line to commit them) ---\ndocs/sessions/\n' >> "$target/.gitignore"
-    fi
+  # Optional modules in a workspace are provided by the devkit PLUGIN (hooks and
+  # scripts live there, built via --workspace). A member repo only needs each
+  # selected module's per-repo config/enable files + gitignore lines, which
+  # apply-project drops without re-wiring hooks (the plugin already wires them).
+  MODULES="$(resolve_modules)"
+  if [ -n "$MODULES" ]; then
+    echo "  modules        $MODULES  (config only; hooks come from the plugin)"
+    python3 "$TEMPLATE_DIR/modules.py" apply-project --config-only --root "$target/.claude" --modules "$MODULES" \
+      | sed 's/^/  note  /'
   fi
   echo "  wire           .claude/settings.json -> $plugin_name"
   python3 - "$target" "$rel" "$plugin_name" <<'WIRE'
@@ -217,68 +218,18 @@ copy() { # copy <relative-path>
 
 echo "Template : $TEMPLATE_DIR"
 echo "Target   : $target"
-$recording && echo "Options  : session recording"
 $dry && echo "Mode     : dry run, nothing will be written"
 echo
 
 ( cd "$PAYLOAD" && find . -type f ! -name gitignore.append -printf '%P\n' | sort ) \
   | while read -r rel; do copy "$rel"; done
 
-# Optional: the session recorder.
-if $recording; then
-  OPTIONAL="$TEMPLATE_DIR/optional"
-  ( cd "$OPTIONAL" && find . -type f -printf '%P\n' | sort ) \
-    | while read -r rel; do
-        src="$OPTIONAL/$rel" dst="$target/$rel"
-        if [ -e "$dst" ]; then
-          echo "  skip (exists)  $rel"
-        else
-          say "install        $rel"
-          if ! $dry; then
-            mkdir -p "$(dirname "$dst")"
-            cp "$src" "$dst"
-            case "$rel" in *.py) chmod +x "$dst" ;; esac
-          fi
-        fi
-      done
-  say "wire           session-recorder hooks into .claude/settings.json"
-  $dry || python3 - "$target" <<'WIRE'
-import json, sys
-from pathlib import Path
-
-settings = Path(sys.argv[1]) / ".claude" / "settings.json"
-cfg = json.loads(settings.read_text()) if settings.is_file() else {}
-hooks = cfg.setdefault("hooks", {})
-cmd = ("sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/session-recorder.py\"; "
-       "[ ! -f \"$f\" ] || python3 \"$f\"'")
-
-WHY = {
-    "SessionStart": "Replays the tail of the previous session, so a developer "
-                    "returning to the project is back in context without "
-                    "re-reading their own code.",
-    "PostToolUse": "Re-renders while a turn is still running, throttled to one "
-                   "write per min_interval_seconds. A long turn would otherwise "
-                   "leave the transcript empty for its whole duration.",
-    "Stop": "Re-renders after every assistant turn, unthrottled, so the file "
-            "stays current even if the session is never closed cleanly.",
-    "SessionEnd": "Final render of the session transcript.",
-}
-
-for event in ("SessionStart", "PostToolUse", "Stop", "SessionEnd"):
-    entries = hooks.setdefault(event, [])
-    if any(h.get("name") == "session-recorder"
-           for e in entries for h in e.get("hooks", [])):
-        continue
-    entries.append({
-        "_why": "Optional session recording. " + WHY[event] +
-                " Renders Claude's real transcript rather than reconstructing "
-                "from hook events, which would lose the assistant's prose. "
-                "Control with /recording.",
-        "hooks": [{"type": "command", "name": "session-recorder",
-                   "command": cmd, "timeout": 15000}]})
-
-settings.write_text(json.dumps(cfg, indent=2) + "\n")
-WIRE
+# Optional modules (registry-driven): copy files, wire hooks, append gitignore.
+MODULES="$(resolve_modules)"
+if [ -n "$MODULES" ]; then
+  echo "  modules        $MODULES"
+  $dry || python3 "$TEMPLATE_DIR/modules.py" apply-project --root "$target/.claude" --modules "$MODULES" \
+    | sed 's/^/  note  /'
 fi
 
 # .gitignore is appended to, not replaced.
@@ -309,6 +260,6 @@ still empty:
 That command reads the codebase, interviews you layer by layer, writes the
 project CLAUDE.md and rules, and presents what it covers until you confirm it.
 
-Not installed with --with-recording and want session transcripts later? Re-run
-this installer with the flag; it adds only what is missing.
+Want more optional modules later? Re-run with --with <mod,...>; it adds only
+what is missing.
 NEXT
