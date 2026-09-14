@@ -1,21 +1,16 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-
-  "_mcp": "MCP servers are project-specific — this project's database, tracker, monitoring. The template ships none on purpose. Declare them in .mcp.json at the repo root; /project-init asks what deserves live access.",
-
+  "_mcp": "MCP servers are project-specific \u2014 this project's database, tracker, monitoring. The template ships none on purpose. Declare them in .mcp.json at the repo root; /project-init asks what deserves live access.",
   "_authorship": "History is authored by humans. The template never adds an AI co-author trailer.",
   "includeCoAuthoredBy": false,
-
   "cleanupPeriodDays": 30,
-
-  "_statusLine": "Agnostic status line: dir · git branch · model · output style. Script degrades gracefully if jq/git are absent.",
+  "_statusLine": "Agnostic status line: dir \u00b7 git branch \u00b7 model \u00b7 output style. Script degrades gracefully if jq/git are absent.",
   "statusLine": {
     "type": "command",
     "command": "$CLAUDE_PROJECT_DIR/.claude/statusline.sh",
     "padding": 0
   },
-
-  "_permissions": "Mechanical defaults, not policy. deny is a hard stop (secrets, vendored/generated reads); ask forces a human beat before an outward or irreversible action. Projects tighten or loosen in settings.local.json — never commit real allow-lists of paths that leak layout.",
+  "_permissions": "Mechanical defaults, not policy. deny is a hard stop (secrets, vendored/generated reads); ask forces a human beat before an outward or irreversible action. Projects tighten or loosen in settings.local.json \u2014 never commit real allow-lists of paths that leak layout.",
   "permissions": {
     "deny": [
       "Read(./.env)",
@@ -33,7 +28,27 @@
       "Read(./dist/**)",
       "Read(./build/**)",
       "Read(./vendor/**)",
-      "Read(**/*.generated.*)"
+      "Read(**/*.generated.*)",
+      "Read(**/*secret*)",
+      "Read(**/*.p12)",
+      "Read(**/.pypirc)",
+      "Read(./.config/gcloud/**)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Edit(./secrets/**)",
+      "Edit(**/*credentials*)",
+      "Edit(**/*.pem)",
+      "Edit(**/*.key)",
+      "Edit(**/id_rsa*)",
+      "Edit(./.ssh/**)",
+      "Edit(./.aws/**)",
+      "Edit(./.kube/**)",
+      "Edit(./.netrc)",
+      "Edit(./.npmrc)",
+      "Edit(**/*secret*)",
+      "Edit(**/*.p12)",
+      "Edit(**/.pypirc)",
+      "Edit(./.config/gcloud/**)"
     ],
     "ask": [
       "Bash(git push --force:*)",
@@ -46,11 +61,10 @@
       "Bash(gh release create:*)"
     ]
   },
-
   "hooks": {
     "PreToolUse": [
       {
-        "_why": "No secret ever reaches disk or a commit. Refuses to write a file containing a known key shape, and refuses a git commit whose staged diff carries one. A net, not a permit — a password typed as prose passes through.",
+        "_why": "No secret ever reaches disk or a commit. Refuses to write a file containing a known key shape, and refuses a git commit whose staged diff carries one. A net, not a permit \u2014 a password typed as prose passes through.",
         "matcher": "Write|Edit|MultiEdit|Bash",
         "hooks": [
           {
@@ -62,7 +76,7 @@
         ]
       },
       {
-        "_why": "Every meaningful folder carries a README: role, structure, what belongs there and what does NOT, and the rules that govern it. BLOCKS creating a file in an undocumented folder — the moment a folder is born is the only moment anyone still knows what it was for. Written later it is archaeology. Editing an existing file only warns: that debt predates the change.",
+        "_why": "Every meaningful folder carries a README: role, structure, what belongs there and what does NOT, and the rules that govern it. BLOCKS creating a file in an undocumented folder \u2014 the moment a folder is born is the only moment anyone still knows what it was for. Written later it is archaeology. Editing an existing file only warns: that debt predates the change.",
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
@@ -86,7 +100,7 @@
         ]
       },
       {
-        "_why": "Mechanical backstop for destructive git: force push, hard reset, force branch delete, remote-branch delete, `clean -f`, `checkout -f`. Carries a `permissionDecision: deny` when it fires — instruction cannot override it.",
+        "_why": "Mechanical backstop for destructive git: force push, hard reset, force branch delete, remote-branch delete, `clean -f`, `checkout -f`. Carries a `permissionDecision: deny` when it fires \u2014 instruction cannot override it.",
         "matcher": "Bash",
         "hooks": [
           {
@@ -98,7 +112,7 @@
         ]
       },
       {
-        "_why": "Circuit breaker for external API calls (curl/wget/fetch/requests) made from Bash. Blocks a call whose per-endpoint circuit is OPEN so a failing dependency is not hammered. Recording of outcomes to open a circuit is not yet wired (needs a PostToolUse companion) — see hooks/README.md.",
+        "_why": "Circuit breaker for external API calls (curl/wget/fetch/requests) made from Bash. Blocks a call whose per-endpoint circuit is OPEN so a failing dependency is not hammered. Recording of outcomes to open a circuit is not yet wired (needs a PostToolUse companion) \u2014 see hooks/README.md.",
         "matcher": "Bash",
         "hooks": [
           {
@@ -110,7 +124,6 @@
         ]
       }
     ],
-
     "UserPromptSubmit": [
       {
         "_why": "Detects frustration/debug markers or continuation requests (bilingual FR/EN) and injects a style adjustment via additionalContext. Never blocks (exit 0 always).",
@@ -124,7 +137,6 @@
         ]
       }
     ],
-
     "PostToolUse": [
       {
         "_why": "Keeps the code knowledge graph current: runs `graphify update .` after a write instead of relying on the agent to remember. Fire-and-forget, AST-only, no API cost; skips silently when graphify is absent.",
