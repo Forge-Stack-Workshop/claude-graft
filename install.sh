@@ -5,6 +5,7 @@
 #   ./install.sh /path/to/repo
 #   ./install.sh /path/to/repo --dry             show what would happen
 #   ./install.sh /path/to/repo --with-recording  also install the session recorder
+#   ./install.sh /path/to/repo --with-ape         also install the APE prompt optimizer
 #
 # Multi-repo workspace — the doctrine is central to THIS project, never to the
 # machine, so changing one project's Claude never touches another's:
@@ -30,6 +31,7 @@ PAYLOAD="$TEMPLATE_DIR/payload"
 target=""
 dry=false
 recording=false
+ape=false
 mode=mono
 next_is_name=false
 next_is_devkit=false
@@ -41,6 +43,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry)            dry=true ;;
     --with-recording) recording=true ;;
+    --with-ape)       ape=true ;;
     --workspace)      mode=workspace ;;
     --devkit)         next_is_devkit=true ;;
     --name)           next_is_name=true ;;
@@ -50,8 +53,8 @@ for arg in "$@"; do
 done
 
 if [ -z "$target" ]; then
-  echo "usage: $0 <repo> [--dry] [--with-recording]" >&2
-  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording]" >&2
+  echo "usage: $0 <repo> [--dry] [--with-recording] [--with-ape]" >&2
+  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording] [--with-ape]" >&2
   exit 64
 fi
 
@@ -62,13 +65,19 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  build_flags=""
+  $recording && build_flags="$build_flags --with-recording"
+  $ape && build_flags="$build_flags --with-ape"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $build_flags
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $ape; then
+    echo
+    echo "APE prompt optimizer is enabled for the workspace"
+    echo "(triages each prompt; disable per-prompt with a leading '!ape')."
   fi
   cat <<NEXT
 
@@ -98,13 +107,19 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  build_flags=""
+  $recording && build_flags="$build_flags --with-recording"
+  $ape && build_flags="$build_flags --with-ape"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $build_flags
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $ape; then
+    echo
+    echo "APE prompt optimizer is enabled for the workspace"
+    echo "(triages each prompt; disable per-prompt with a leading '!ape')."
   fi
   cat <<NEXT
 
@@ -218,6 +233,7 @@ copy() { # copy <relative-path>
 echo "Template : $TEMPLATE_DIR"
 echo "Target   : $target"
 $recording && echo "Options  : session recording"
+$ape && echo "Options  : APE prompt optimizer"
 $dry && echo "Mode     : dry run, nothing will be written"
 echo
 
@@ -276,6 +292,49 @@ for event in ("SessionStart", "PostToolUse", "Stop", "SessionEnd"):
                 "Control with /recording.",
         "hooks": [{"type": "command", "name": "session-recorder",
                    "command": cmd, "timeout": 15000}]})
+
+settings.write_text(json.dumps(cfg, indent=2) + "\n")
+WIRE
+fi
+
+# Optional: the APE prompt optimizer.
+if $ape; then
+  OPTIONAL="$TEMPLATE_DIR/optional"
+  for rel in .claude/hooks/ape_hook.py .claude/hooks/ape-transform-v2.md .claude/ape-README.md; do
+    src="$OPTIONAL/$rel" dst="$target/$rel"
+    if [ -e "$dst" ]; then
+      echo "  skip (exists)  $rel"
+    else
+      say "install        $rel"
+      if ! $dry; then
+        mkdir -p "$(dirname "$dst")"
+        cp "$src" "$dst"
+        case "$rel" in *.py) chmod +x "$dst" ;; esac
+      fi
+    fi
+  done
+  say "wire           APE hook into .claude/settings.json"
+  $dry || python3 - "$target" <<'WIRE'
+import json, sys
+from pathlib import Path
+
+settings = Path(sys.argv[1]) / ".claude" / "settings.json"
+cfg = json.loads(settings.read_text()) if settings.is_file() else {}
+hooks = cfg.setdefault("hooks", {})
+cmd = ("sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/ape_hook.py\"; "
+       "s=\"$CLAUDE_PROJECT_DIR/.claude/hooks/ape-transform-v2.md\"; "
+       "[ ! -f \"$f\" ] || python3 \"$f\" --spec \"$s\"'")
+
+entries = hooks.setdefault("UserPromptSubmit", [])
+if not any(h.get("name") == "ape"
+           for e in entries for h in e.get("hooks", [])):
+    entries.append({
+        "_why": "Optional APE prompt optimizer. Triages each prompt locally and "
+                "injects the transformation spec only when a rewrite is warranted. "
+                "Fails open — never blocks the turn. Disable per-prompt with a "
+                "leading '!ape' or 'sans ape'.",
+        "hooks": [{"type": "command", "name": "ape",
+                   "command": cmd, "timeout": 5000}]})
 
 settings.write_text(json.dumps(cfg, indent=2) + "\n")
 WIRE

@@ -86,7 +86,7 @@ def git_root(path: Path) -> Path | None:
 
 
 def build(workspace: Path, devkit: Path, name: str,
-          recording: bool = False) -> None:
+          recording: bool = False, ape: bool = False) -> None:
     # The devkit repository holds more than Claude; the configuration takes one
     # subdirectory of it rather than colonising its root.
     repo = git_root(devkit)
@@ -142,6 +142,14 @@ def build(workspace: Path, devkit: Path, name: str,
                         plugin / "skills" / "session-recording", dirs_exist_ok=True)
         shutil.copy2(opt / "commands" / "recording.md", plugin / "commands")
 
+    # Optional: the APE prompt-optimizer. A thin triage hook plus its spec go in
+    # the plugin so every repository shares one implementation; the hook fails
+    # open and only ever injects context, never blocking a turn.
+    if ape:
+        opt = TEMPLATE / "optional" / ".claude"
+        shutil.copy2(opt / "hooks" / "ape_hook.py", plugin / "hooks")
+        shutil.copy2(opt / "hooks" / "ape-transform-v2.md", plugin / "hooks")
+
     settings = json.loads((PAYLOAD / "settings.json").read_text())
     hooks = settings.get("hooks", {})
     if recording:
@@ -161,6 +169,17 @@ def build(workspace: Path, devkit: Path, name: str,
                         "is absent or disabled. Control with /recording.",
                 "hooks": [{"type": "command", "name": "session-recorder",
                            "command": cmd, "timeout": 15000}]})
+    if ape:
+        cmd = ("sh -c 'f=\"${CLAUDE_PLUGIN_ROOT}/hooks/ape_hook.py\"; "
+               "s=\"${CLAUDE_PLUGIN_ROOT}/hooks/ape-transform-v2.md\"; "
+               "[ ! -f \"$f\" ] || python3 \"$f\" --spec \"$s\"'")
+        hooks.setdefault("UserPromptSubmit", []).append({
+            "_why": "Optional APE prompt optimizer. Triages each prompt locally "
+                    "and injects the transformation spec only when a rewrite is "
+                    "warranted. Fails open — never blocks the turn. Disable "
+                    "per-prompt with a leading '!ape' or 'sans ape'.",
+            "hooks": [{"type": "command", "name": "ape",
+                       "command": cmd, "timeout": 5000}]})
     for entries in hooks.values():
         for entry in entries:
             for hook in entry.get("hooks", []):
@@ -285,7 +304,7 @@ def build(workspace: Path, devkit: Path, name: str,
     print(f"repos       untouched — no CLAUDE.md, no .claude/, nothing")
 
 
-def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
+def parse(argv: list[str]) -> tuple[Path, Path, str, bool, bool]:
     flags = {"--name", "--devkit"}
     positional, opts, skip = [], {}, False
     for i, a in enumerate(argv):
@@ -309,7 +328,8 @@ def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
     if workspace not in devkit.parents and devkit != workspace:
         raise SystemExit(f"--devkit must live inside the workspace ({workspace})")
     name = opts.get("--name") or (git_root(devkit) or devkit).name
-    return workspace, devkit, name, "--with-recording" in argv
+    return (workspace, devkit, name,
+            "--with-recording" in argv, "--with-ape" in argv)
 
 
 if __name__ == "__main__":

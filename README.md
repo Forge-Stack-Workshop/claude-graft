@@ -39,6 +39,7 @@ affect another's.
 ./install.sh /path/to/repo --dry              # see what would happen
 ./install.sh /path/to/repo                    # install
 ./install.sh /path/to/repo --with-recording   # + session transcripts
+./install.sh /path/to/repo --with-ape         # + APE prompt optimizer
 cd /path/to/repo && claude
 /project-init
 ```
@@ -248,6 +249,28 @@ passes straight through.
 
 Not installed at first? Re-run the installer with the flag — it adds only what
 is missing and never duplicates the hook wiring.
+
+---
+
+## APE prompt optimizer — optional
+
+`--with-ape` wires a `UserPromptSubmit` hook that reframes a raw prompt into a
+better-scoped one before Claude acts on it. It is a **thin adapter**: a cheap
+local triage (`ape_hook.py`) decides whether a prompt is even worth optimizing,
+and only then injects the transformation spec (`ape-transform-v2.md`) for the
+model to apply. Trivial messages (`ok`, `go`, a slash-command), already
+well-structured prompts, and anything marked `!ape` / `sans ape` stay untouched.
+
+The hook **fails open** — an unreadable spec or any error never blocks the
+turn; at worst the prompt passes through unchanged. It injects context only, and
+carries no reasoning or answer of its own.
+
+Both files live in the plugin (workspace mode) or under `.claude/hooks/`
+(mono-repo), so every repository shares one implementation. The doctrine itself
+is in `ape-transform-v2.md` — edit it there, review it like any other change.
+
+Not installed at first? Re-run the installer with `--with-ape` — it adds only
+what is missing and never duplicates the hook wiring.
 
 ---
 
