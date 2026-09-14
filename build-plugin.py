@@ -86,7 +86,7 @@ def git_root(path: Path) -> Path | None:
 
 
 def build(workspace: Path, devkit: Path, name: str,
-          recording: bool = False) -> None:
+          recording: bool = False, guardrails: bool = False) -> None:
     # The devkit repository holds more than Claude; the configuration takes one
     # subdirectory of it rather than colonising its root.
     repo = git_root(devkit)
@@ -142,6 +142,12 @@ def build(workspace: Path, devkit: Path, name: str,
                         plugin / "skills" / "session-recording", dirs_exist_ok=True)
         shutil.copy2(opt / "commands" / "recording.md", plugin / "commands")
 
+    # Optional: config-driven PreToolUse guardrails hook + its config.
+    if guardrails:
+        opt = TEMPLATE / "optional" / ".claude"
+        shutil.copy2(opt / "hooks" / "guardrails.py", plugin / "hooks")
+        shutil.copy2(opt / "guardrails.config.json", plugin / "guardrails.config.json")
+
     settings = json.loads((PAYLOAD / "settings.json").read_text())
     hooks = settings.get("hooks", {})
     if recording:
@@ -161,6 +167,17 @@ def build(workspace: Path, devkit: Path, name: str,
                         "is absent or disabled. Control with /recording.",
                 "hooks": [{"type": "command", "name": "session-recorder",
                            "command": cmd, "timeout": 15000}]})
+    if guardrails:
+        cmd = ("sh -c 'f=\"${CLAUDE_PLUGIN_ROOT}/hooks/guardrails.py\"; "
+               "[ ! -f \"$f\" ] || python3 \"$f\"'")
+        hooks.setdefault("PreToolUse", []).append({
+            "matcher": "Bash",
+            "_why": "Optional guardrails. Blocks a mutating gh command run under "
+                    "the wrong account (per guardrails.config.json orgs/account) "
+                    "and reminds about project pytest flags. Fails open; inert "
+                    "until the config is filled.",
+            "hooks": [{"type": "command", "name": "guardrails",
+                       "command": cmd, "timeout": 6000}]})
     for entries in hooks.values():
         for entry in entries:
             for hook in entry.get("hooks", []):
@@ -285,7 +302,7 @@ def build(workspace: Path, devkit: Path, name: str,
     print(f"repos       untouched — no CLAUDE.md, no .claude/, nothing")
 
 
-def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
+def parse(argv: list[str]) -> tuple[Path, Path, str, bool, bool]:
     flags = {"--name", "--devkit"}
     positional, opts, skip = [], {}, False
     for i, a in enumerate(argv):
@@ -309,7 +326,8 @@ def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
     if workspace not in devkit.parents and devkit != workspace:
         raise SystemExit(f"--devkit must live inside the workspace ({workspace})")
     name = opts.get("--name") or (git_root(devkit) or devkit).name
-    return workspace, devkit, name, "--with-recording" in argv
+    return (workspace, devkit, name,
+            "--with-recording" in argv, "--with-guardrails" in argv)
 
 
 if __name__ == "__main__":

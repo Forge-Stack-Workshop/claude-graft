@@ -39,6 +39,7 @@ affect another's.
 ./install.sh /path/to/repo --dry              # see what would happen
 ./install.sh /path/to/repo                    # install
 ./install.sh /path/to/repo --with-recording   # + session transcripts
+./install.sh /path/to/repo --with-guardrails  # + gh-account / pytest guardrails hook
 cd /path/to/repo && claude
 /project-init
 ```
@@ -248,6 +249,22 @@ passes straight through.
 
 Not installed at first? Re-run the installer with the flag — it adds only what
 is missing and never duplicates the hook wiring.
+
+---
+
+## Guardrails hook — optional
+
+`--with-guardrails` installs a config-driven `PreToolUse` (Bash) hook plus
+`guardrails.config.json`. Two checks, both **inert until you fill the config**:
+
+- **gh-account** — blocks a *mutating* `gh` command when the repo's origin is one
+  of your configured orgs but the active `gh` account is not the required one.
+  Prevents pushing/merging as the wrong account.
+- **pytest reminder** — non-blocking note when a `pytest` run omits flags this
+  codebase tends to need (e.g. `-p no:query_optimizer`, `--no-cov`).
+
+The hook **fails open**: any error, or a placeholder config, allows the command.
+No secrets — the config holds only org/account names and pytest flags.
 
 ---
 

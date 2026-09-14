@@ -5,6 +5,7 @@
 #   ./install.sh /path/to/repo
 #   ./install.sh /path/to/repo --dry             show what would happen
 #   ./install.sh /path/to/repo --with-recording  also install the session recorder
+#   ./install.sh /path/to/repo --with-guardrails  also install the gh-account/pytest guardrails hook
 #
 # Multi-repo workspace — the doctrine is central to THIS project, never to the
 # machine, so changing one project's Claude never touches another's:
@@ -30,6 +31,7 @@ PAYLOAD="$TEMPLATE_DIR/payload"
 target=""
 dry=false
 recording=false
+guardrails=false
 mode=mono
 next_is_name=false
 next_is_devkit=false
@@ -41,6 +43,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry)            dry=true ;;
     --with-recording) recording=true ;;
+    --with-guardrails) guardrails=true ;;
     --workspace)      mode=workspace ;;
     --devkit)         next_is_devkit=true ;;
     --name)           next_is_name=true ;;
@@ -50,8 +53,8 @@ for arg in "$@"; do
 done
 
 if [ -z "$target" ]; then
-  echo "usage: $0 <repo> [--dry] [--with-recording]" >&2
-  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording]" >&2
+  echo "usage: $0 <repo> [--dry] [--with-recording] [--with-guardrails]" >&2
+  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording] [--with-guardrails]" >&2
   exit 64
 fi
 
@@ -62,13 +65,18 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  build_flags=""
+  $recording && build_flags="$build_flags --with-recording"
+  $guardrails && build_flags="$build_flags --with-guardrails"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $build_flags
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $guardrails; then
+    echo
+    echo "Guardrails hook added (edit claude/guardrails.config.json to enable)."
   fi
   cat <<NEXT
 
@@ -98,13 +106,18 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  build_flags=""
+  $recording && build_flags="$build_flags --with-recording"
+  $guardrails && build_flags="$build_flags --with-guardrails"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $build_flags
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $guardrails; then
+    echo
+    echo "Guardrails hook added (edit claude/guardrails.config.json to enable)."
   fi
   cat <<NEXT
 
@@ -218,6 +231,7 @@ copy() { # copy <relative-path>
 echo "Template : $TEMPLATE_DIR"
 echo "Target   : $target"
 $recording && echo "Options  : session recording"
+$guardrails && echo "Options  : guardrails hook"
 $dry && echo "Mode     : dry run, nothing will be written"
 echo
 
@@ -277,6 +291,37 @@ for event in ("SessionStart", "PostToolUse", "Stop", "SessionEnd"):
         "hooks": [{"type": "command", "name": "session-recorder",
                    "command": cmd, "timeout": 15000}]})
 
+settings.write_text(json.dumps(cfg, indent=2) + "\n")
+WIRE
+fi
+
+# Optional: config-driven guardrails PreToolUse hook + its config.
+if $guardrails; then
+  OPTIONAL="$TEMPLATE_DIR/optional"
+  mkdir -p "$target/.claude/hooks"
+  h="$target/.claude/hooks/guardrails.py"
+  if [ -e "$h" ]; then echo "  skip (exists)  .claude/hooks/guardrails.py"
+  else say "install        .claude/hooks/guardrails.py"; $dry || { cp "$OPTIONAL/.claude/hooks/guardrails.py" "$h"; chmod +x "$h"; }; fi
+  gc="$target/.claude/guardrails.config.json"
+  if [ -e "$gc" ]; then echo "  skip (exists)  .claude/guardrails.config.json"
+  else say "install        .claude/guardrails.config.json (fill in to enable)"; $dry || cp "$OPTIONAL/.claude/guardrails.config.json" "$gc"; fi
+  say "wire           guardrails hook into .claude/settings.json"
+  $dry || python3 - "$target" <<'WIRE'
+import json, sys
+from pathlib import Path
+settings = Path(sys.argv[1]) / ".claude" / "settings.json"
+cfg = json.loads(settings.read_text()) if settings.is_file() else {}
+hooks = cfg.setdefault("hooks", {})
+cmd = ("sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/guardrails.py\"; "
+       "[ ! -f \"$f\" ] || python3 \"$f\"'")
+entries = hooks.setdefault("PreToolUse", [])
+if not any(h.get("name") == "guardrails" for e in entries for h in e.get("hooks", [])):
+    entries.append({
+        "matcher": "Bash",
+        "_why": "Optional guardrails. Blocks a mutating gh command under the wrong "
+                "account and reminds about project pytest flags. Fails open; inert "
+                "until guardrails.config.json is filled.",
+        "hooks": [{"type": "command", "name": "guardrails", "command": cmd, "timeout": 6000}]})
 settings.write_text(json.dumps(cfg, indent=2) + "\n")
 WIRE
 fi
