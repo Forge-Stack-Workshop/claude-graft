@@ -5,6 +5,7 @@
 #   ./install.sh /path/to/repo
 #   ./install.sh /path/to/repo --dry             show what would happen
 #   ./install.sh /path/to/repo --with-recording  also install the session recorder
+#   ./install.sh /path/to/repo --with-recommendations  also add recommended plugins/MCP docs
 #
 # Multi-repo workspace — the doctrine is central to THIS project, never to the
 # machine, so changing one project's Claude never touches another's:
@@ -30,6 +31,7 @@ PAYLOAD="$TEMPLATE_DIR/payload"
 target=""
 dry=false
 recording=false
+recommendations=false
 mode=mono
 next_is_name=false
 next_is_devkit=false
@@ -41,6 +43,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry)            dry=true ;;
     --with-recording) recording=true ;;
+    --with-recommendations) recommendations=true ;;
     --workspace)      mode=workspace ;;
     --devkit)         next_is_devkit=true ;;
     --name)           next_is_name=true ;;
@@ -50,8 +53,8 @@ for arg in "$@"; do
 done
 
 if [ -z "$target" ]; then
-  echo "usage: $0 <repo> [--dry] [--with-recording]" >&2
-  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording]" >&2
+  echo "usage: $0 <repo> [--dry] [--with-recording] [--with-recommendations]" >&2
+  echo "       $0 --workspace <root> --devkit <repo-in-the-workspace> [--name <plugin>] [--with-recording] [--with-recommendations]" >&2
   exit 64
 fi
 
@@ -62,13 +65,19 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  build_flags=""
+  $recording && build_flags="$build_flags --with-recording"
+  $recommendations && build_flags="$build_flags --with-recommendations"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $build_flags
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $recommendations; then
+    echo
+    echo "Recommended plugins/MCP docs added to the devkit"
+    echo "(claude/recommended-plugins.md + recommended-mcp.json)."
   fi
   cat <<NEXT
 
@@ -98,13 +107,19 @@ if [ "$mode" = workspace ]; then
   echo "Workspace : $target"
   $dry && { echo "dry run: would build the devkit at '$devkit_path' and link $target/CLAUDE.md"; exit 0; }
   name_arg=""; [ -n "$plugin_name" ] && name_arg="--name $plugin_name"
+  build_flags=""
+  $recording && build_flags="$build_flags --with-recording"
+  $recommendations && build_flags="$build_flags --with-recommendations"
+  python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg $build_flags
   if $recording; then
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg --with-recording
     echo
     echo "Session recording is enabled for the workspace"
     echo "(.claude/session-recording.json). Control it with /recording."
-  else
-    python3 "$TEMPLATE_DIR/build-plugin.py" "$target" --devkit "$devkit_path" $name_arg
+  fi
+  if $recommendations; then
+    echo
+    echo "Recommended plugins/MCP docs added to the devkit"
+    echo "(claude/recommended-plugins.md + recommended-mcp.json)."
   fi
   cat <<NEXT
 
@@ -218,6 +233,7 @@ copy() { # copy <relative-path>
 echo "Template : $TEMPLATE_DIR"
 echo "Target   : $target"
 $recording && echo "Options  : session recording"
+$recommendations && echo "Options  : recommended plugins/MCP docs"
 $dry && echo "Mode     : dry run, nothing will be written"
 echo
 
@@ -279,6 +295,20 @@ for event in ("SessionStart", "PostToolUse", "Stop", "SessionEnd"):
 
 settings.write_text(json.dumps(cfg, indent=2) + "\n")
 WIRE
+fi
+
+# Optional: recommended plugins / MCP reference docs (no code, no secrets).
+if $recommendations; then
+  OPTIONAL="$TEMPLATE_DIR/optional"
+  for rel in .claude/recommended-plugins.md .claude/recommended-mcp.json; do
+    src="$OPTIONAL/$rel" dst="$target/$rel"
+    if [ -e "$dst" ]; then
+      echo "  skip (exists)  $rel"
+    else
+      say "install        $rel"
+      $dry || { mkdir -p "$(dirname "$dst")"; cp "$src" "$dst"; }
+    fi
+  done
 fi
 
 # .gitignore is appended to, not replaced.

@@ -39,6 +39,7 @@ affect another's.
 ./install.sh /path/to/repo --dry              # see what would happen
 ./install.sh /path/to/repo                    # install
 ./install.sh /path/to/repo --with-recording   # + session transcripts
+./install.sh /path/to/repo --with-recommendations  # + recommended plugins/MCP docs
 cd /path/to/repo && claude
 /project-init
 ```
@@ -248,6 +249,20 @@ passes straight through.
 
 Not installed at first? Re-run the installer with the flag — it adds only what
 is missing and never duplicates the hook wiring.
+
+---
+
+## Recommended plugins & MCP — optional
+
+`--with-recommendations` drops two **reference-only** files into the setup:
+`recommended-plugins.md` (a curated, public plugin + marketplace shortlist) and
+`recommended-mcp.json` (token-free MCP servers). They install nothing by
+themselves — they document a reproducible, high-signal Claude Code setup so a new
+project starts from the same shortlist instead of rediscovering it.
+
+Nothing with a credential is ever shipped: servers needing a token (Home
+Assistant, hosted HTTP endpoints) are omitted by design — add them locally with
+your own secret.
 
 ---
 
