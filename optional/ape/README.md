@@ -28,6 +28,6 @@ Retirer l'entrée `UserPromptSubmit` pointant vers `ape_hook.py` dans
 
 ## Avant de généraliser
 
-**Mesurer via Mirador avant de scaler.** La spec émet une trace structurée
+**Mesurer via votre observabilité avant de scaler.** La spec émet une trace structurée
 (`raw / regime / task_class / slots_missing / optimized / user_decision`) : c'est ce
 corpus qui dira si l'APE aide réellement.

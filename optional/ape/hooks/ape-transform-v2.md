@@ -84,7 +84,7 @@ These show the Grid in action. Do not treat them as the only cases to catch.
 
 ---
 
-## Observability hook (chrysa / Mirador)
+## Observability hook (optional sink)
 
 When emitting an optimization, also emit a structured trace (if a sink is configured):
 
