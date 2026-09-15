@@ -21,9 +21,9 @@ so a screenshot in the README always shows the UI that actually ships.
 
 ## Why
 
-discordium, studioverse and chrysa-portfolio-viz each re-authored the identical
-convention with the same file path and wording. Making it a skill removes the
-re-invention and guarantees docs images track the shipped UI instead of rotting.
+Multiple projects independently re-author the identical convention, with the same
+file path and wording. Making it a skill removes the re-invention and guarantees
+docs images track the shipped UI instead of rotting.
 
 ## Checklist
 
