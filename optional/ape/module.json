@@ -1,0 +1,16 @@
+{
+  "id": "ape",
+  "title": "APE prompt optimizer",
+  "description": "UserPromptSubmit hook that reframes a raw prompt before Claude acts. Thin local triage injects the spec only when a rewrite is warranted. Fails open.",
+  "default": false,
+  "files": [
+    {"src": "hooks/ape_hook.py", "dst": "hooks/ape_hook.py", "chmod": true},
+    {"src": "hooks/ape-transform-v2.md", "dst": "hooks/ape-transform-v2.md"}
+  ],
+  "hooks": [
+    {"event": "UserPromptSubmit", "name": "ape", "timeout": 5000,
+     "command": "sh -c 'f=\"${ROOT}/hooks/ape_hook.py\"; s=\"${ROOT}/hooks/ape-transform-v2.md\"; [ ! -f \"$f\" ] || python3 \"$f\" --spec \"$s\"'",
+     "why": "Optional APE prompt optimizer. Triages each prompt locally and injects the transformation spec only when a rewrite is warranted. Fails open. Disable per-prompt with a leading '!ape' or 'sans ape'."}
+  ],
+  "notes": "APE prompt optimizer enabled. Disable per-prompt with a leading '!ape' or 'sans ape'."
+}

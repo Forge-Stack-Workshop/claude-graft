@@ -1,0 +1,16 @@
+{
+  "id": "workflow-commands",
+  "title": "Workflow commands (Notion/Sentry ops)",
+  "description": "Config-driven /inbox-triage /notion-recon /notion-weekly /sentry-fix /slop-check. All coupling lives in workflow-commands.config.json; tokens by env-var name only.",
+  "default": false,
+  "files": [
+    {"src": "commands/inbox-triage.md", "dst": "commands/inbox-triage.md"},
+    {"src": "commands/notion-recon.md", "dst": "commands/notion-recon.md"},
+    {"src": "commands/notion-weekly.md", "dst": "commands/notion-weekly.md"},
+    {"src": "commands/sentry-fix.md", "dst": "commands/sentry-fix.md"},
+    {"src": "commands/slop-check.md", "dst": "commands/slop-check.md"},
+    {"src": "workflow-commands.config.json", "dst": "workflow-commands.config.json"}
+  ],
+  "hooks": [],
+  "notes": "Workflow commands added. Fill in .claude/workflow-commands.config.json (database ids, hosts, ticketing) before use."
+}

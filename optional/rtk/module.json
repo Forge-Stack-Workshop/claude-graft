@@ -1,0 +1,28 @@
+{
+  "id": "rtk",
+  "title": "RTK token-savings synergy",
+  "description": "Rewrites a verbose Bash command to the local, offline `rtk` proxy before it runs, so output reaching the context window is 60-90% smaller. Ships the rtk-savings skill + /rtk command; the hook is inert when rtk is not on PATH.",
+  "default": false,
+  "files": [
+    {
+      "src": "skills/rtk-savings/SKILL.md",
+      "dst": "skills/rtk-savings/SKILL.md"
+    },
+    {
+      "src": "commands/rtk.md",
+      "dst": "commands/rtk.md"
+    }
+  ],
+  "hooks": [
+    {
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "name": "rtk-hook",
+      "timeout": 10000,
+      "command": "sh -c 'command -v rtk >/dev/null 2>&1 && exec rtk hook claude || true'",
+      "why": "Optional RTK token savings. Rewrites a verbose Bash command to its token-optimised rtk proxy before it runs (60-90% smaller output). Registry-appended after the safety guards, so a denied command is never rewritten. Inert when rtk is not on PATH. See the rtk-savings skill; read savings with /rtk."
+    }
+  ],
+  "notes": "RTK synergy enabled. Install rtk (github.com/dhamidi/rtk) on PATH to activate; inert otherwise. Read savings with /rtk.",
+  "order": 100
+}

@@ -1,0 +1,28 @@
+{
+  "id": "recording",
+  "title": "Session recording",
+  "description": "Render each session as a readable conversation under docs/sessions/ (transparency + continuity). Control with /recording.",
+  "default": false,
+  "files": [
+    {"src": "hooks/session-recorder.py", "dst": "hooks/session-recorder.py", "chmod": true},
+    {"src": "skills/session-recording/SKILL.md", "dst": "skills/session-recording/SKILL.md"},
+    {"src": "commands/recording.md", "dst": "commands/recording.md"},
+    {"src": "session-recording.json", "dst": "session-recording.json"}
+  ],
+  "hooks": [
+    {"event": "SessionStart", "name": "session-recorder", "timeout": 15000,
+     "command": "sh -c 'f=\"${ROOT}/hooks/session-recorder.py\"; [ ! -f \"$f\" ] || python3 \"$f\"'",
+     "why": "Optional session recording. Replays the tail of the previous session so a developer returning is back in context. Inert unless .claude/session-recording.json is enabled. Control with /recording."},
+    {"event": "PostToolUse", "name": "session-recorder", "timeout": 15000,
+     "command": "sh -c 'f=\"${ROOT}/hooks/session-recorder.py\"; [ ! -f \"$f\" ] || python3 \"$f\"'",
+     "why": "Optional session recording. Re-renders mid-turn, throttled. Inert unless enabled. Control with /recording."},
+    {"event": "Stop", "name": "session-recorder", "timeout": 15000,
+     "command": "sh -c 'f=\"${ROOT}/hooks/session-recorder.py\"; [ ! -f \"$f\" ] || python3 \"$f\"'",
+     "why": "Optional session recording. Re-renders after every assistant turn. Inert unless enabled. Control with /recording."},
+    {"event": "SessionEnd", "name": "session-recorder", "timeout": 15000,
+     "command": "sh -c 'f=\"${ROOT}/hooks/session-recorder.py\"; [ ! -f \"$f\" ] || python3 \"$f\"'",
+     "why": "Optional session recording. Final render of the transcript. Inert unless enabled. Control with /recording."}
+  ],
+  "gitignore": ["# --- Session transcripts (remove this line to commit them) ---", "docs/sessions/"],
+  "notes": "Session recording enabled. Control it with /recording (status | on | off | pause | resume). Transcripts are gitignored by default."
+}

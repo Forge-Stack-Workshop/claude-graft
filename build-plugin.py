@@ -40,6 +40,8 @@ from __future__ import annotations
 import json, os, re, shutil, subprocess, sys
 from pathlib import Path
 
+import modules as registry
+
 TEMPLATE = Path(__file__).resolve().parent
 PAYLOAD = TEMPLATE / "payload" / ".claude"
 
@@ -86,7 +88,8 @@ def git_root(path: Path) -> Path | None:
 
 
 def build(workspace: Path, devkit: Path, name: str,
-          recording: bool = False) -> None:
+          module_ids: list[str] | None = None) -> None:
+    module_ids = module_ids or []
     # The devkit repository holds more than Claude; the configuration takes one
     # subdirectory of it rather than colonising its root.
     repo = git_root(devkit)
@@ -132,35 +135,13 @@ def build(workspace: Path, devkit: Path, name: str,
     for script in sorted((PAYLOAD / "hooks").iterdir()):
         shutil.copy2(script, plugin / "hooks" / script.name)
 
-    # Optional: the session recorder. Its code goes in the plugin so every
-    # repository shares one implementation; whether a repository actually
-    # records is decided by its own session-recording.json.
-    if recording:
-        opt = TEMPLATE / "optional" / ".claude"
-        shutil.copy2(opt / "hooks" / "session-recorder.py", plugin / "hooks")
-        shutil.copytree(opt / "skills" / "session-recording",
-                        plugin / "skills" / "session-recording", dirs_exist_ok=True)
-        shutil.copy2(opt / "commands" / "recording.md", plugin / "commands")
+    # Optional modules: copy their files into the plugin (registry-driven).
+    mod_result = registry.apply(plugin, module_ids, "${CLAUDE_PLUGIN_ROOT}")
 
     settings = json.loads((PAYLOAD / "settings.json").read_text())
     hooks = settings.get("hooks", {})
-    if recording:
-        cmd = ("sh -c 'f=\"${CLAUDE_PLUGIN_ROOT}/hooks/session-recorder.py\"; "
-               "[ ! -f \"$f\" ] || python3 \"$f\"'")
-        why = {
-            "SessionStart": "Replays the tail of the previous session, so a "
-                            "developer returning to the project is back in context.",
-            "PostToolUse": "Re-renders mid-turn, throttled to one write per min_interval_seconds.",
-            "Stop": "Re-renders after every assistant turn, unthrottled.",
-            "SessionEnd": "Final render of the session transcript.",
-        }
-        for event, reason in why.items():
-            hooks.setdefault(event, []).append({
-                "_why": "Optional session recording. " + reason +
-                        " Inert in a repository whose .claude/session-recording.json "
-                        "is absent or disabled. Control with /recording.",
-                "hooks": [{"type": "command", "name": "session-recorder",
-                           "command": cmd, "timeout": 15000}]})
+    for event, entries in mod_result["hooks_by_event"].items():
+        hooks.setdefault(event, []).extend(entries)
     for entries in hooks.values():
         for entry in entries:
             for hook in entry.get("hooks", []):
@@ -247,10 +228,6 @@ def build(workspace: Path, devkit: Path, name: str,
     for cfg in ("thresholds.json", "folder-readme.json", "convention-guard.json"):
         if not (plugin / cfg).exists():
             shutil.copy2(PAYLOAD / cfg, plugin / cfg)
-    if recording and not (plugin / "session-recording.json").exists():
-        shutil.copy2(TEMPLATE / "optional" / ".claude" / "session-recording.json",
-                     plugin)
-
     # The only thing that cannot live in the devkit: project settings are not
     # inherited from parent directories, so the launch directory must carry the
     # file that enables the plugin. It carries nothing else.
@@ -285,8 +262,8 @@ def build(workspace: Path, devkit: Path, name: str,
     print(f"repos       untouched — no CLAUDE.md, no .claude/, nothing")
 
 
-def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
-    flags = {"--name", "--devkit"}
+def parse(argv: list[str]) -> tuple[Path, Path, str, list | None]:
+    flags = {"--name", "--devkit", "--modules"}
     positional, opts, skip = [], {}, False
     for i, a in enumerate(argv):
         if skip:
@@ -309,7 +286,11 @@ def parse(argv: list[str]) -> tuple[Path, Path, str, bool]:
     if workspace not in devkit.parents and devkit != workspace:
         raise SystemExit(f"--devkit must live inside the workspace ({workspace})")
     name = opts.get("--name") or (git_root(devkit) or devkit).name
-    return workspace, devkit, name, "--with-recording" in argv
+    mods = None
+    if "--modules" in argv:
+        i = argv.index("--modules")
+        mods = [m for m in argv[i + 1].split(",") if m] if i + 1 < len(argv) else []
+    return workspace, devkit, name, mods
 
 
 if __name__ == "__main__":
