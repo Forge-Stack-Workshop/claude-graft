@@ -171,13 +171,36 @@ def build(workspace: Path, devkit: Path, name: str,
     (plugin / "hooks" / "hooks.json").write_text(
         json.dumps({"hooks": hooks}, indent=2) + "\n")
 
-    (plugin / ".claude-plugin" / "plugin.json").write_text(json.dumps({
+    manifest = {
         "name": name,
         "description": "Shared engineering doctrine for this workspace: "
                        "path-scoped conventions, scaffolding and flow skills, "
                        "review agents, and the write-time guards.",
         "version": template_version(),
-    }, indent=2) + "\n")
+    }
+    # MCP servers are stored agnostically in payload/.claude/mcp.json — one
+    # source of truth, edited without touching this script — and derived into
+    # the single plugin manifest, exactly like skills and agents. A local
+    # server's command paths resolve against the plugin, so they are rewritten
+    # to ${CLAUDE_PLUGIN_ROOT}, the same relocation the hooks get.
+    mcp_src = PAYLOAD / "mcp.json"
+    if mcp_src.exists():
+        servers = json.loads(mcp_src.read_text()).get("mcpServers", {})
+        for server in servers.values():
+            args = server.get("args")
+            if isinstance(args, list):
+                server["args"] = [
+                    a.replace('$CLAUDE_PROJECT_DIR/.claude/',
+                              '${CLAUDE_PLUGIN_ROOT}/') if isinstance(a, str) else a
+                    for a in args]
+            cmd = server.get("command")
+            if isinstance(cmd, str):
+                server["command"] = cmd.replace(
+                    '$CLAUDE_PROJECT_DIR/.claude/', '${CLAUDE_PLUGIN_ROOT}/')
+        if servers:
+            manifest["mcpServers"] = servers
+    (plugin / ".claude-plugin" / "plugin.json").write_text(
+        json.dumps(manifest, indent=2) + "\n")
 
     (plugin / ".claude-plugin" / "marketplace.json").write_text(json.dumps({
         "name": name,
