@@ -1,0 +1,79 @@
+# standards-governance-skills — configuration (example)
+#
+# The skills are project-agnostic. ALL organization/project specifics live
+# here (or in your standards canon), never in the skill text. Copy this file to
+# `config.yaml` and fill it in. Anything left blank is treated as "resolve from
+# the canon" or "not configured" — the skills degrade gracefully and say so.
+version: 1
+
+# --- The standards canon: the single source of truth the skills consume ------
+# The skills never embed rule text. They resolve rules from this canon by ID,
+# at use time, via the tools below. When the canon changes, the skills keep
+# working with no edit.
+canon:
+  # Where the executable standards live (a repo, a path, or an API base URL).
+  source: ""                      # e.g. git URL, local path, or https://.../v1
+  kind: repo                      # repo | api | local-artefact
+  baseline_file: ""               # e.g. standards/STANDARDS.<org>.md (optional)
+  annexes_dir: ""                 # e.g. standards/annexes/ (optional)
+  domains_file: ""                # e.g. standards/domains.yaml (the ID index)
+  # The marker of the per-repo managed block that mirrors the canon into a
+  # target repo's agent file (CLAUDE.md / AGENTS.md). Leave the default or set
+  # your own; NO project name is assumed.
+  managed_block_marker: "<!-- standards -->"
+
+# --- Tooling the skills call (configured command names) ----------------------
+# Give the command the skill should invoke. If empty, the skill falls back to
+# reading the canon directly, and if nothing is reachable it works on the
+# invariants only and says the canon is unresolved.
+tooling:
+  standards_cli: "standards"      # supports: list | show <ID> | search | profiles resolve | diff | export | doctor
+  conformity_checker: ""          # a deterministic conformance CLI (read-only verdict)
+  bootstrap_tool: ""              # your project-initialization / scaffolding generator
+  shared_bricks_source: ""        # a shared-library / component source to reuse instead of duplicating
+  sandbox: ""                     # a non-privileged execution sandbox for generated code/commands
+  llm_abstraction: ""             # the layer features must use instead of a vendor LLM SDK
+
+# --- The standards model the skills assume -----------------------------------
+# These are the shapes the skills reason about. Adjust the vocabulary to match
+# your canon. The skills enforce the MODEL; your canon provides the CONTENT.
+model:
+  # Priority tiers, highest first. Top tier = never traded away.
+  priority_tiers: [P0, P1, P2]
+  # Maturity / adoption markers, strongest first. Only the strongest with a
+  # stable ID + owner + automated gate is enforceable/blocking.
+  maturity_markers: [adopted, derived, suggestion, to-arbitrate]
+  enforceable_marker: adopted
+  # Project profiles this org recognizes (what a repo *is*).
+  profiles: [library, service, frontend, worker, cli, game, infrastructure]
+  # Architecture-depth levels (scale ceremony to domain complexity).
+  architecture_levels: [level-0, level-1, level-2, level-3]
+  # Lifecycle states (drive maintenance cadence and how strict "done" is now).
+  lifecycle_states: [active, maintenance, blocked, frozen]
+  # The field(s) a repo uses to declare itself (bootstrap/audit read these).
+  declaration_keys: [project_profile, architecture_style, architecture_level, bounded_context, standards_version]
+  # The org's non-negotiable invariants, as IDs or short tags resolved from the
+  # canon. Leave empty to resolve the full set from the canon; list the few you
+  # want always-enforced even when the canon is unreachable.
+  invariants: []
+
+# --- Quality gates (examples; real values resolved from the canon) -----------
+gates:
+  # A language gate command set, by stack. Empty => resolve from the canon.
+  language_gates: {}              # e.g. python: ["ruff format --check", "ruff check", "mypy", "lint-imports", "deptry .", "pytest", "lockfile check"]
+  thresholds_files: []            # e.g. [.thresholds.json, .quality-gate.json]
+
+# --- SCM / external-action policy --------------------------------------------
+scm:
+  protected_branch: main
+  working_branch: develop
+  release_triggers_production: true
+  one_pr_per_issue: true
+  conventional_commits: true
+
+# --- Human-validation posture ------------------------------------------------
+# The risk scale and manual-required list are generic (see
+# shared/references/risk-and-human-gates.md). Extend the manual-required list
+# with anything specific to your environment.
+human_validation:
+  manual_required_extra: []       # e.g. ["structural changes to <your tracker>"]

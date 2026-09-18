@@ -1,0 +1,47 @@
+# Machine-readable index of the standards-governance skill set.
+# This is navigation metadata, not a source of truth. The canon is configured in
+# config.yaml; skills resolve rules from it by reference.
+version: 1
+config: config.yaml            # copy config.example.yaml -> config.yaml
+conventions:
+  on_disk_language: en
+  project_agnostic: true       # no project/vendor names in skills; specifics live in config.yaml
+  no_agent_lock_in: true       # plain Markdown + YAML frontmatter; portable across agents
+spine: governance-core
+choke_point: external-actions  # all R>=3 / out-of-sandbox effects route here
+shared_references:
+  - shared/references/consuming-the-canon.md
+  - shared/references/rule-hierarchy.md
+  - shared/references/risk-and-human-gates.md
+  - shared/references/profiles-and-maturity.md
+  - shared/references/standards-model.md
+  - shared/references/conformity-and-gates.md
+skills:
+  - id: governance-core
+    level: 1-core-governance
+    path: skills/01-governance-core/SKILL.md
+    always_on: true
+  - id: project-bootstrap
+    level: 2-project-bootstrap
+    path: skills/02-project-bootstrap/SKILL.md
+  - id: development-conventions
+    level: 3-development
+    path: skills/03-development-conventions/SKILL.md
+  - id: infrastructure-execution
+    level: 4-infrastructure
+    path: skills/04-infrastructure-execution/SKILL.md
+  - id: quality-validation
+    level: 5-quality-validation
+    path: skills/05-quality-validation/SKILL.md
+  - id: observability-diagnostics
+    level: 6-observability
+    path: skills/06-observability-diagnostics/SKILL.md
+  - id: standards-audit
+    level: 7-audit-compliance
+    path: skills/07-standards-audit/SKILL.md
+  - id: ui-ux-interaction
+    level: 8-ui-ux
+    path: skills/08-ui-ux-interaction/SKILL.md
+  - id: external-actions
+    level: 9-external-actions
+    path: skills/09-external-actions/SKILL.md
