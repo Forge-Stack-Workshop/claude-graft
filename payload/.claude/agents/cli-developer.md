@@ -1,5 +1,6 @@
 ---
 name: cli-developer
+model: sonnet
 description: Builds and hardens command-line tools — argument parsing, subcommands, exit codes, piping UX, packaging. NOT MCP servers or web APIs.
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
