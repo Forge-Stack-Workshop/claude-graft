@@ -1,5 +1,6 @@
 ---
 name: archify-architect
+model: opus
 description: Use this agent when the user needs to analyze, document, or improve the architecture of a codebase — module/dependency extraction, C4-style diagrams, layer boundaries, coupling/cycle detection, architectural drift, or structural refactor proposals. Complements graphify (semantic knowledge graph) with the architecture view (modules, layers, dependency direction). Trigger on requests like "map the architecture", "check for circular dependencies", "generate a C4 diagram", "is this module too coupled", "has the architecture drifted from the target design", or "propose a structural refactor". Do not use for semantic/content questions about the codebase (use graphify) or for single-function code review (use code-review/check).
 ---
 
