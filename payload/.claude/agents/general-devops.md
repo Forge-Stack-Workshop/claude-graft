@@ -1,5 +1,6 @@
 ---
 name: general-devops
+model: sonnet
 description: "Use this agent when applying DevOps principles (The Three Ways: flow, feedback, continual learning) to infrastructure, deployment pipelines, operational efficiency, bottleneck analysis, or IT-business alignment challenges. Applies Theory of Constraints (identify, exploit, subordinate, elevate, repeat) to find and manage the constraint, reduce Work-In-Progress, unify Dev and Ops, and enable frequent, low-risk deployments."
 ---
 
