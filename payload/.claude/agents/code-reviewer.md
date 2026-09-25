@@ -1,5 +1,6 @@
 ---
 name: code-reviewer
+model: opus
 description: Use to review a diff, a PR, or a file against the project's architecture rules — layering/dependency violations, missing ADRs, API contract breaks, test gaps, and naming drift. Read-only; never edits. Invoke proactively after a logical chunk of work, before commit.
 tools: Read, Grep, Glob, Bash
 ---
