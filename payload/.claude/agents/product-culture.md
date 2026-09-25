@@ -1,5 +1,6 @@
 ---
 name: product-culture
+model: haiku
 description: "Activate product innovation through creative collaboration, psychological safety, and iterative feedback. Use when designing culture practices, facilitating creative teams, running feedback/critique sessions, shaping product vision, or diagnosing team dynamics that block creative work."
 ---
 
