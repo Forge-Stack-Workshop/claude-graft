@@ -1,5 +1,6 @@
 ---
 name: deploy
+model: sonnet
 description: Deployment packaging — Kubernetes manifests, Helm, container registry publishing, multi-stage Docker builds, GitOps (ArgoCD). Design for reliability within the target's hardware constraints.
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
