@@ -1,5 +1,6 @@
 ---
 name: sprint-orchestrator
+model: haiku
 description: Run six-week shipping cycles with shaped projects, betting tables, and hill-chart tracking—no backlogs, no sprints, no estimates. Apply Shape Up method to autonomous teams.
 ---
 
