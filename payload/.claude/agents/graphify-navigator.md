@@ -1,5 +1,6 @@
 ---
 name: graphify-navigator
+model: haiku
 description: Use this agent to answer any question about a codebase or project's structure, architecture, relationships, or concepts, when a graphify knowledge graph (graphify-out/) exists or can be generated. Prefer this agent over raw grep/search for "how does X work", "what depends on Y", "where is Z used", "explain concept W" style questions. Examples: <example>user: "How does the mission dispatch flow connect to the provider layer?" assistant: "I'll use the graphify-navigator agent to trace that relationship through the knowledge graph." <commentary>Relationship question between two entities — use graphify path.</commentary></example> <example>user: "What is the FSM in apps/automata and what talks to it?" assistant: "Launching graphify-navigator to explain the concept and its scoped subgraph." <commentary>Concept explanation — use graphify explain, not a blind grep across automata/.</commentary></example> <example>user: "I just refactored the provider dispatch service, can you tell me what else references it?" assistant: "I'll run graphify-navigator; it will also refresh the graph first since code changed." <commentary>Code changed since last graph build — navigator updates before querying.</commentary></example>
 ---
 
