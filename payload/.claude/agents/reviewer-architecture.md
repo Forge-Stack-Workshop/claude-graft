@@ -1,5 +1,6 @@
 ---
 name: reviewer-architecture
+model: opus
 description: Reviews a code diff for structural problems — unwanted coupling, breaking interface contracts, abstraction leaks, and wrong-direction dependencies. Read-only; returns findings only.
 tools: Read, Grep, Glob
 ---
