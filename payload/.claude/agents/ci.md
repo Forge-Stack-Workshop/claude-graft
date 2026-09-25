@@ -1,5 +1,6 @@
 ---
 name: ci
+model: sonnet
 description: CI/CD engineer — GitHub Actions pipelines, pre-commit, Dependabot, code-quality gates, semantic versioning, branch protection, container registry publishing. Use when configuring pipelines or debugging CI failures.
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
