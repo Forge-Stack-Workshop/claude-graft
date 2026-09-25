@@ -1,5 +1,6 @@
 ---
 name: reviewer-security
+model: opus
 description: Reviews a code diff for vulnerabilities that survive correctness review — injection paths, authentication bypass, credential exposure, and trust-boundary violations. Read-only; returns findings only.
 tools: Read, Grep, Glob
 ---
