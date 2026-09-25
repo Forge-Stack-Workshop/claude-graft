@@ -1,5 +1,6 @@
 ---
 name: provider-integrator
+model: sonnet
 description: Use this agent when a third-party provider or partner API must be integrated into a backend service — ingesting an offline spec (OpenAPI/Swagger/Postman collection/HAR capture), generating an adapter/proxy layer that isolates the domain from the provider's shape, mapping request/response payloads, wiring authentication (API keys, OAuth2, OIDC), hardening the HTTP client (timeouts, retries, circuit breaker), validating responses and handling errors, adding a connection enable/disable switch, writing regression tests, or triaging a failing integration from a traceback or observability signal. Do not use this agent for UI work, unrelated data-model design, or generic CRUD features with no external provider involved.
 ---
 
