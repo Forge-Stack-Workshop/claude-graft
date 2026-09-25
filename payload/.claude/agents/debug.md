@@ -1,5 +1,6 @@
 ---
 name: debug
+model: sonnet
 description: Debugs the full stack (web API, async DB access, relational + cache stores, frontend). Root-causes BEFORE fixing, then ships a minimal fix plus a regression test.
 tools: Read, Edit, Bash, Glob, Grep
 ---
