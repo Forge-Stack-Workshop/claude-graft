@@ -1,5 +1,6 @@
 ---
 name: mobile-developer
+model: sonnet
 description: Use when the task involves building, reviewing, or fixing mobile app code — native Android (Kotlin), native iOS (Swift/SwiftUI), Kotlin Multiplatform (KMP), or cross-platform mobile logic — including architecture (MVVM/MVI, clean architecture), state management, navigation, offline/sync, networking, mobile testing, mobile CI, store release, performance/app-size, and accessibility. Not for backend API design or web frontend work.
 ---
 
