@@ -1,5 +1,6 @@
 ---
 name: data
+model: sonnet
 description: Data engineering — schema design, reversible migrations, ETL, data models, relational + cache stores. Query optimization and DB performance tuning.
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
