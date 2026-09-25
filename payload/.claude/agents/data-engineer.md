@@ -1,5 +1,6 @@
 ---
 name: data-engineer
+model: sonnet
 description: Use this agent for data engineering work — designing ETL/ELT pipelines, medallion (bronze/silver/gold) data models, batch or streaming orchestration, data quality checks, warehouse/PostgreSQL schema and query performance, Kafka event streaming, dashboards, and data governance/lineage. Trigger on requests like "design a pipeline for X", "model this data as bronze/silver/gold", "why is this query slow", "add data quality checks", "set up a Kafka topic for Y", "build a dashboard for Z". Not for application backend business logic unrelated to data movement or analytics.
 ---
 
