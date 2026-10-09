@@ -61,7 +61,35 @@
       "Read(~/.aws/**)",
       "Read(~/.kube/**)",
       "Read(~/.vault-token)",
-      "Read(!.env.example)"
+      "Read(!.env.example)",
+      "Read(**/node_modules/**)",
+      "Read(**/.venv/**)",
+      "Read(**/__pycache__/**)",
+      "Read(**/.mypy_cache/**)",
+      "Read(**/.ruff_cache/**)",
+      "Read(**/.terraform/**)",
+      "Read(**/coverage/**)",
+      "Read(**/.next/**)",
+      "Read(**/dist/**)",
+      "Read(**/*.min.js)",
+      "Read(**/*.map)"
+    ],
+    "allow": [
+      "Bash(rtk git status *)",
+      "Bash(rtk git diff *)",
+      "Bash(rtk git log *)",
+      "Bash(rtk git show *)",
+      "Bash(rtk git branch *)",
+      "Bash(rtk git add *)",
+      "Bash(rtk git commit *)",
+      "Bash(rtk gh pr view *)",
+      "Bash(rtk gh pr list *)",
+      "Bash(rtk gh pr diff *)",
+      "Bash(rtk gh pr checks *)",
+      "Bash(rtk gh issue view *)",
+      "Bash(rtk gh issue list *)",
+      "Bash(rtk gh run list *)",
+      "Bash(rtk gh run view *)"
     ]
   }
 }
