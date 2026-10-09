@@ -8,3 +8,11 @@ __pycache__/
 # Local Claude state, if you run Claude Code inside this repository
 .claude/settings.local.json
 CLAUDE.local.md
+
+# prism-ai-lint: keep secrets and local config out of git
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
