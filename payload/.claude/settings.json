@@ -106,6 +106,21 @@
           }
         ]
       }
+    ],
+
+    "SessionStart": [
+      {
+        "_why": "Establishes project identity (family/profile from the git remote) at session start and points at the project-context skill, so the right stack, modules and standards load before the first edit. Never blocks (exit 0). Read-only; never touches RAIN or padam-av config.",
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "project-context",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/project-context.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "timeout": 5000
+          }
+        ]
+      }
     ]
   }
 }
