@@ -1,0 +1,4 @@
+{
+  "_why": "Agnostic source of truth for the MCP servers shared across the workspace. Edited here, derived into the plugin manifest by build-plugin.py under the `mcpServers` key. Local servers may use ${CLAUDE_PLUGIN_ROOT} (or $CLAUDE_PROJECT_DIR/.claude/, rewritten at build time) for their command paths. Never hardcode secrets: reference ${ENV_VAR} and document it in .env.example.",
+  "mcpServers": {}
+}
