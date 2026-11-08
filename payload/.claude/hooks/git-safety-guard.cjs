@@ -28,13 +28,24 @@ function loadConfig() {
 }
 
 /**
+ * Blank single/double-quoted spans so a destructive pattern that lives only
+ * inside a quoted argument — a commit message, a PR body, a `-m "…"` string —
+ * is neither split on a separator it contains nor mistaken for the git
+ * operation itself. Applied before splitting, so `;`/`&&`/`|` inside quotes
+ * do not fragment the command.
+ */
+function stripQuoted(command) {
+	return command.replace(/"[^"]*"|'[^']*'/g, " ");
+}
+
+/**
  * Split a shell command into subcommands on newlines, &&, ||, ; and | so
  * checks don't leak across subcommands — or across quoted text that merely
  * mentions a git invocation (e.g. a PR body, a heredoc, a hook's own test
  * fixture) without actually running one.
  */
 function splitSubcommands(command) {
-	return command
+	return stripQuoted(command)
 		.split(/\r?\n|&&|\|\||;|\|/)
 		.map((s) => s.trim())
 		.filter(Boolean);
@@ -102,6 +113,21 @@ const CHECKS = [
 		reason:
 			"`git checkout -f` discards uncommitted changes irreversibly. " +
 			"Ask the user to confirm explicitly, or run it manually outside Claude.",
+	},
+	{
+		name: "gate bypass",
+		// --no-verify skips pre-commit/pre-push hooks; --no-gpg-sign skips signing;
+		// a leading SKIP= escapes specific pre-commit hooks. `-n` is NOT matched:
+		// on `git push` it means --dry-run, which is harmless.
+		test: (sub) =>
+			(/\b(commit|push)\b/.test(sub) && /--no-verify\b/.test(sub)) ||
+			/--no-gpg-sign\b/.test(sub) ||
+			/(?:^|\s)SKIP=\S+/.test(sub),
+		reason:
+			"Skipping a commit/push gate (--no-verify, --no-gpg-sign, SKIP=) defeats " +
+			"the pre-commit and CI quality/security controls. Never disable a security " +
+			"control to make a gate pass without explicit, traced user approval — fix " +
+			"the finding instead.",
 	},
 ];
 
