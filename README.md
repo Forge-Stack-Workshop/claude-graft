@@ -53,6 +53,7 @@ repo/
     ├── rules/                the conventions
     ├── skills/               project-scaffold · feature-flow
     ├── agents/               flow-tracer · conformance-reviewer
+    ├── mcp.json              shared MCP servers (agnostic source of truth)
     ├── commands/             /project-init /code-flow /commit /folder-readme
     ├── tools/                which-rules.py · check-template.py
     └── hooks/                the guards
