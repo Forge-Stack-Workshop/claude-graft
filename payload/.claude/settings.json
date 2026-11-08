@@ -3,6 +3,67 @@
 
   "_mcp": "MCP servers are project-specific — this project's database, tracker, monitoring. The template ships none on purpose. Declare them in .mcp.json at the repo root; /project-init asks what deserves live access.",
 
+  "_authorship": "History is authored by humans. The template never adds an AI co-author trailer.",
+  "includeCoAuthoredBy": false,
+  "cleanupPeriodDays": 30,
+  "_statusLine": "Agnostic status line: dir · git branch · model · output style. Script degrades gracefully if jq/git are absent.",
+  "statusLine": {
+    "type": "command",
+    "command": "$CLAUDE_PROJECT_DIR/.claude/statusline.sh",
+    "padding": 0
+  },
+  "_permissions": "Mechanical defaults, not policy. deny is a hard stop (secrets, vendored/generated reads); ask forces a human beat before an outward or irreversible action. Projects tighten or loosen in settings.local.json — never commit real allow-lists of paths that leak layout.",
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(**/*credentials*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/id_rsa*)",
+      "Read(./.ssh/**)",
+      "Read(./.aws/**)",
+      "Read(./.kube/**)",
+      "Read(./.netrc)",
+      "Read(./.npmrc)",
+      "Read(./dist/**)",
+      "Read(./build/**)",
+      "Read(./vendor/**)",
+      "Read(**/*.generated.*)",
+      "Read(**/*secret*)",
+      "Read(**/*.p12)",
+      "Read(**/.pypirc)",
+      "Read(./.config/gcloud/**)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Edit(./secrets/**)",
+      "Edit(**/*credentials*)",
+      "Edit(**/*.pem)",
+      "Edit(**/*.key)",
+      "Edit(**/id_rsa*)",
+      "Edit(./.ssh/**)",
+      "Edit(./.aws/**)",
+      "Edit(./.kube/**)",
+      "Edit(./.netrc)",
+      "Edit(./.npmrc)",
+      "Edit(**/*secret*)",
+      "Edit(**/*.p12)",
+      "Edit(**/.pypirc)",
+      "Edit(./.config/gcloud/**)"
+    ],
+    "ask": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean:*)",
+      "Bash(sudo:*)",
+      "Bash(npm publish:*)",
+      "Bash(docker push:*)",
+      "Bash(gh release create:*)"
+    ]
+  },
+
   "hooks": {
     "PreToolUse": [
       {
