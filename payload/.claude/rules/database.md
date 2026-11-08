@@ -38,6 +38,24 @@ paths:
 - **Migrations are versioned, reversible, and reviewed.** No manual change to a
   running database. A migration that cannot be rolled back says so and why.
 - A migration touching a large table states its locking behaviour before merge.
+- A schema change that could lose data runs **expand → migrate → contract** (add
+  the new shape, backfill, then drop the old) with a snapshot before the
+  destructive step, so a deploy is reversible without a restore.
+
+## Ownership, classification & portability
+
+- **Every data category declares an owner, a system of record, and a
+  classification.** Who owns it, where the authoritative copy lives, and how
+  sensitive it is (public / internal / personal / secret) are written down — not
+  implied by which table it landed in. Personal and secret data carry their
+  classification through caching and logging (see `code-quality.md`,
+  `security.md`).
+- **Data is exportable to an open format with no vendor lock-in.** Personal and
+  domain data can be exported to JSON/SQLite/CSV by a documented command;
+  `export → import → export` is idempotent, and that round-trip is a test, not an
+  intention (see `pillars.md`).
+- **Backups are restore-tested.** A backup nobody has restored is a hope, not a
+  backup. The restore procedure is exercised, not just scheduled.
 
 ## The schema is documented, and its map is generated
 
